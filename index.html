@@ -2310,6 +2310,19 @@ body.reel-mini #site>main{z-index:5!important}
 
 /* celular: aproxima o Design Book do carrossel */
 @media (max-width:760px){#design .book-txt{padding-top:4px!important}#design .book-txt>*:first-child{margin-top:0!important}#design .book-txt h2{margin-top:6px!important}}
+
+/* ===== botão de música de fundo ===== */
+.sbtn{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;background:transparent;border:1px solid var(--ln2);cursor:pointer;transition:border-color .3s,background .3s;padding:0}
+.sbtn:hover{border-color:var(--gd)}
+.sbtn .eq{display:flex;align-items:flex-end;gap:2.5px;height:14px}
+.sbtn .eq i{display:block;width:2.5px;height:4px;border-radius:2px;background:#9a9a9a;transition:background .3s,height .3s}
+.sbtn.on .eq i{background:var(--gd);animation:eqb 1s ease-in-out infinite}
+.sbtn.on .eq i:nth-child(2){animation-delay:-.4s;animation-duration:.8s}
+.sbtn.on .eq i:nth-child(3){animation-delay:-.7s;animation-duration:1.15s}
+.sbtn.on .eq i:nth-child(4){animation-delay:-.2s;animation-duration:.9s}
+@keyframes eqb{0%,100%{height:4px}50%{height:14px}}
+@media (max-width:760px){.sbtn{width:36px;height:36px}}
+@media (prefers-reduced-motion:reduce){.sbtn.on .eq i{animation:none;height:10px}}
 </style>
 </head>
 <body>
@@ -2386,6 +2399,7 @@ body.reel-mini #site>main{z-index:5!important}
     <div class="icons">
       <a class="hide-m" href="https://www.youtube.com/@devoeae" target="_blank" rel="noopener" aria-label="YouTube" data-c="ABRIR"><svg><use href="#i-yt"/></svg></a>
       <a class="hide-m" href="https://www.tiktok.com/@devoe.ae" target="_blank" rel="noopener" aria-label="TikTok" data-c="ABRIR"><svg><use href="#i-tt"/></svg></a>
+      <button class="sbtn" id="sbtn" aria-label="Ligar música de fundo" aria-pressed="false" title="Música"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
       <div class="notif">
         <button class="nbtn" id="nbtn" aria-label="Mensagens" aria-expanded="false" aria-controls="npanel"><svg><use href="#i-mail"/></svg><span class="badge" id="nbadge">1</span></button>
         <div class="npanel" id="npanel" role="dialog" aria-label="Mensagem de boas-vindas">
@@ -3662,6 +3676,28 @@ route();
     else if (!en.isIntersecting && dealt) undeal();
   }), { threshold: [0, .3] }).observe(fan);
   addEventListener("resize", () => { if (!dealt) stack(); });
+})();
+
+/* ---------- música de fundo: baixinha, começa no primeiro toque, botão liga/desliga ---------- */
+(function(){
+  const btn = document.getElementById("sbtn"); if (!btn) return;
+  const VOL = 0.12, KEY = "devoe-som";
+  let audio = null, wanted = true, fadeT = 0;
+  try { wanted = localStorage.getItem(KEY) !== "off"; } catch (_) {}
+  const mk = () => { if (audio) return audio; audio = new Audio("audio/fundo.mp3"); audio.loop = true; audio.preload = "auto"; audio.volume = 0; return audio; };
+  const fade = (to, ms, done) => { cancelAnimationFrame(fadeT); const a = audio, from = a.volume, t0 = performance.now();
+    const step = now => { const u = Math.min(1, (now - t0) / ms); a.volume = Math.max(0, Math.min(1, from + (to - from) * u)); if (u < 1) fadeT = requestAnimationFrame(step); else done && done(); };
+    fadeT = requestAnimationFrame(step); };
+  const ui = on => { btn.classList.toggle("on", on); btn.setAttribute("aria-pressed", on); btn.setAttribute("aria-label", on ? "Desligar música de fundo" : "Ligar música de fundo"); };
+  const play = () => { const a = mk(); const p = a.play(); if (p && p.then) p.then(() => { ui(true); fade(VOL, 1800); }).catch(() => ui(false)); else { ui(true); fade(VOL, 1800); } };
+  const stop = () => { if (!audio) return; ui(false); fade(0, 500, () => audio.pause()); };
+  const save = v => { try { localStorage.setItem(KEY, v ? "on" : "off"); } catch (_) {} };
+  btn.addEventListener("click", e => { e.stopPropagation(); const on = audio && !audio.paused && btn.classList.contains("on"); if (on) { wanted = false; stop(); } else { wanted = true; play(); } save(wanted); });
+  const first = e => { if (e.target && e.target.closest && e.target.closest("#sbtn")) return; ["pointerdown","keydown","touchstart"].forEach(t => removeEventListener(t, first, true)); if (wanted) play(); };
+  ["pointerdown","keydown","touchstart"].forEach(t => addEventListener(t, first, { capture: true, passive: true }));
+  /* pausa quando a aba fica em segundo plano e volta ao retornar */
+  document.addEventListener("visibilitychange", () => { if (!audio || !wanted) return; if (document.hidden) audio.pause(); else if (btn.classList.contains("on")) audio.play().catch(() => {}); });
+  ui(false);
 })();
 </script>
 </body>
