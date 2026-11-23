@@ -2323,6 +2323,29 @@ body.reel-mini #site>main{z-index:5!important}
 @keyframes eqb{0%,100%{height:4px}50%{height:14px}}
 @media (max-width:760px){.sbtn{width:36px;height:36px}}
 @media (prefers-reduced-motion:reduce){.sbtn.on .eq i{animation:none;height:10px}}
+
+/* caixinha de mensagens: novos posts */
+.npanel{max-height:min(560px,calc(100dvh - 120px));overflow-y:auto;overscroll-behavior:contain}
+.nposts:empty{display:none}
+.nposts{border-top:1px solid rgba(255,255,255,.07);padding:10px 12px 12px}
+.nposts h4{font:600 9.5px var(--tx);letter-spacing:.22em;text-transform:uppercase;color:var(--gd);margin:2px 4px 8px;display:flex;align-items:center;gap:8px}
+.nposts h4 i{width:6px;height:6px;border-radius:50%;background:var(--gd);box-shadow:0 0 8px var(--gd)}
+.npost{display:flex;gap:11px;align-items:center;padding:8px;border-radius:12px;text-decoration:none;color:inherit;transition:background .25s}
+.npost:hover{background:rgba(255,255,255,.05)}
+.npost .nth{position:relative;flex:0 0 46px;height:60px;border-radius:8px;overflow:hidden;background:linear-gradient(135deg,#25F4EE33,#FE2C5533),#161616;display:grid;place-items:center}
+.npost .nth img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .4s}
+.npost .nth img.ok{opacity:1}
+.npost .nth svg{width:16px;height:16px;fill:#fff;opacity:.7}
+.npost .nbody{min-width:0;flex:1}
+.npost .nbody small{display:flex;align-items:center;gap:6px;font:600 10px var(--tx);color:#8a8a8a;letter-spacing:.04em}
+.npost .nbody small em{font-style:normal;color:#0a0a0a;background:var(--gd);border-radius:4px;padding:1px 5px;font-size:8.5px;letter-spacing:.12em}
+.npost .nbody b{display:block;font:600 13px/1.3 var(--tx);color:#eee;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:3px 0 2px}
+.npost .nbody span{font-size:11px;color:#7d7d7d}
+
+.npanel .nposts .npost{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;text-align:left!important;width:auto!important;height:auto!important;gap:11px!important;padding:8px!important;border:0!important;border-radius:12px!important;background:transparent}
+.npanel .nposts .npost:hover{background:rgba(255,255,255,.05)!important}
+.npanel .nposts .npost .nth{flex:0 0 46px!important;width:46px!important;height:60px!important;border-radius:8px!important}
+.npanel .nposts .npost .nbody{display:block!important;text-align:left!important}
 </style>
 </head>
 <body>
@@ -2412,6 +2435,7 @@ body.reel-mini #site>main{z-index:5!important}
               <p class="nsign">Obrigado pela visita!</p>
             </div>
           </div>
+          <div class="nposts" id="nposts"></div>
         </div>
       </div>
       <button class="burger" id="burger" aria-label="Abrir menu" aria-expanded="false"><span></span></button>
@@ -2727,6 +2751,12 @@ const CONFIG = {
   // Para adicionar uma arte nova: copie um bloco, troque id, título e os 2 links.
   // A imagem de prévia fica em CANVA_PREVIEWS (mesmo id). Sem prévia, aparece um quadro dourado.
   canvaPack: "PACK CANVA ARRAIÁ",
+  /* novos posts que aparecem na caixinha de mensagens (mais novo primeiro) */
+  posts: [
+    { id:"7711462600420199687", title:"These villains are 🔥", views:"9.3K" },
+    { id:"7709334147570928903", title:"Best duo 🔥", views:"20.3K" },
+    { id:"7709180362815196423", title:"Old villains are fire 🔥", views:"259.9K" }
+  ],
   canvaModels: [
     { id:"arraia-24", code:"ARRAIÁ 24", title:"Festa Junina Especial",
       feed:"https://www.canva.com/design/DAGHRUDTemA/Y_avoIRAnD6HsWwVHYL00Q/view?utm_content=DAGHRUDTemA&utm_campaign=designshare&utm_medium=link&utm_source=publishsharelink&mode=preview",
@@ -3509,7 +3539,20 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
 /* ---------- notificação de boas-vindas ---------- */
 (function(){
   const box = document.querySelector(".notif"), btn = $("#nbtn"); if (!box) return;
-  const toggle = open => { box.classList.toggle("open", open); btn.setAttribute("aria-expanded", open); if (open) { const b = $("#nbadge"); if (b) b.remove(); } };
+  /* novos posts do TikTok */
+  const posts = CONFIG.posts || [], SEEN = "devoe-visto";
+  let seen = null; try { seen = localStorage.getItem(SEEN); } catch (_) {}
+  const newCount = seen === null ? 1 : Math.max(0, posts.findIndex(p => p.id === seen) === -1 ? posts.length : posts.findIndex(p => p.id === seen));
+  const list = $("#nposts");
+  if (list && posts.length) {
+    list.innerHTML = `<h4><i></i>Novos posts</h4>` + posts.map((p, i) => `<a class="npost" href="${ttUrl(p.id)}" target="_blank" rel="noopener">
+      <span class="nth"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg><img alt="" data-id="${p.id}"></span>
+      <span class="nbody"><small>TikTok${i < newCount ? " <em>NOVO</em>" : ""}</small><b>${esc(p.title)}</b><span>▶ ${esc(p.views || "")} views</span></span></a>`).join("");
+    posts.forEach(p => getThumb({ id: p.id }).then(u => { const im = list.querySelector(`img[data-id="${p.id}"]`); if (u && im) { im.onload = () => im.classList.add("ok"); im.referrerPolicy = "no-referrer"; im.src = u; } }));
+  }
+  const badge = $("#nbadge"); const total = newCount + (seen === null ? 1 : 0); if (badge) { if (total > 0) badge.textContent = total; else badge.remove(); }
+  const toggle = open => { box.classList.toggle("open", open); btn.setAttribute("aria-expanded", open);
+    if (open) { const b = $("#nbadge"); if (b) b.remove(); try { if (posts[0]) localStorage.setItem(SEEN, posts[0].id); } catch (_) {} } };
   btn.addEventListener("click", e => { e.stopPropagation(); toggle(!box.classList.contains("open")); });
   document.addEventListener("click", e => { if (!box.contains(e.target)) toggle(false); });
   addEventListener("keydown", e => { if (e.key === "Escape") toggle(false); });
@@ -3524,6 +3567,18 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
   const online = /^https?:$/.test(location.protocol);
   const url = id => `https://www.youtube.com/embed/${id}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${id}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   const cmd = (func, args = []) => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: "command", func, args }), "*"); } catch (e) {} };
+  let ytState = -1, ytMuted = true;
+  const duckYt = () => window.devoeDuck && window.devoeDuck("yt", ytState === 1 && !muted && !ytMuted && !closed);
+  const listen = () => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: "listening", id: "devoe", channel: "widget" }), "*"); } catch (e) {} };
+  ifr.addEventListener("load", () => { listen(); setTimeout(listen, 800); });
+  addEventListener("message", ev => {
+    if (!/youtube(-nocookie)?\.com$/.test((ev.origin || "").replace(/^https?:\/\//, "").replace(/^www\./, "")) || ev.source !== ifr.contentWindow) return;
+    let d = ev.data; try { if (typeof d === "string") d = JSON.parse(d); } catch (e) { return; }
+    if (!d) return;
+    if (d.event === "onStateChange" && typeof d.info === "number") ytState = d.info;
+    if (d.event === "infoDelivery" && d.info) { if (typeof d.info.playerState === "number") ytState = d.info.playerState; if (typeof d.info.muted === "boolean") ytMuted = d.info.muted; }
+    duckYt();
+  });
   const setVideo = id => {
     cur = id;
     $("#reelPoster").src = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`; $("#reelPoster").classList.remove("off");
@@ -3556,9 +3611,9 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
     else if (en.boundingClientRect.top < 0 && !closed && !$("#site").hidden) { fr.classList.add("mini"); document.body.classList.add("reel-mini"); cmd("playVideo"); }
     else { fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("pauseVideo"); }
   }), { threshold: .25 }).observe(slot);
-  $("#reelSnd").onclick = e => { e.stopPropagation(); muted = !muted; cmd(muted ? "mute" : "unMute"); if (!muted) cmd("setVolume", [70]);
+  $("#reelSnd").onclick = e => { e.stopPropagation(); muted = !muted; cmd(muted ? "mute" : "unMute"); if (!muted) cmd("setVolume", [70]); ytMuted = muted; duckYt();
     $("#reelSnd").innerHTML = muted ? "🔇 <span>Ativar som</span>" : "🔊 <span>Som ativo</span>"; };
-  $("#reelX").onclick = e => { e.stopPropagation(); closed = true; fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("pauseVideo"); };
+  $("#reelX").onclick = e => { e.stopPropagation(); closed = true; window.devoeDuck && window.devoeDuck("yt", false); fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("pauseVideo"); };
   addEventListener("hashchange", () => { if (location.hash === "#ascom") { fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("pauseVideo"); } });
 })();
 
@@ -3681,7 +3736,8 @@ route();
 /* ---------- música de fundo: baixinha, começa no primeiro toque, botão liga/desliga ---------- */
 (function(){
   const btn = document.getElementById("sbtn"); if (!btn) return;
-  const VOL = 0.12, KEY = "devoe-som";
+  const VOL = 0.12, DUCK = 0.035, KEY = "devoe-som";
+  const ducks = new Set(); const target = () => ducks.size ? DUCK : VOL;
   let audio = null, wanted = true, fadeT = 0;
   try { wanted = localStorage.getItem(KEY) !== "off"; } catch (_) {}
   const mk = () => { if (audio) return audio; audio = new Audio("audio/fundo.mp3"); audio.loop = true; audio.preload = "auto"; audio.volume = 0; return audio; };
@@ -3689,7 +3745,7 @@ route();
     const step = now => { const u = Math.min(1, (now - t0) / ms); a.volume = Math.max(0, Math.min(1, from + (to - from) * u)); if (u < 1) fadeT = requestAnimationFrame(step); else done && done(); };
     fadeT = requestAnimationFrame(step); };
   const ui = on => { btn.classList.toggle("on", on); btn.setAttribute("aria-pressed", on); btn.setAttribute("aria-label", on ? "Desligar música de fundo" : "Ligar música de fundo"); };
-  const play = () => { const a = mk(); const p = a.play(); if (p && p.then) p.then(() => { ui(true); fade(VOL, 1800); }).catch(() => ui(false)); else { ui(true); fade(VOL, 1800); } };
+  const play = () => { const a = mk(); const p = a.play(); if (p && p.then) p.then(() => { ui(true); fade(target(), 1800); }).catch(() => ui(false)); else { ui(true); fade(target(), 1800); } };
   const stop = () => { if (!audio) return; ui(false); fade(0, 500, () => audio.pause()); };
   const save = v => { try { localStorage.setItem(KEY, v ? "on" : "off"); } catch (_) {} };
   btn.addEventListener("click", e => { e.stopPropagation(); const on = audio && !audio.paused && btn.classList.contains("on"); if (on) { wanted = false; stop(); } else { wanted = true; play(); } save(wanted); });
@@ -3697,7 +3753,31 @@ route();
   ["pointerdown","keydown","touchstart"].forEach(t => addEventListener(t, first, { capture: true, passive: true }));
   /* pausa quando a aba fica em segundo plano e volta ao retornar */
   document.addEventListener("visibilitychange", () => { if (!audio || !wanted) return; if (document.hidden) audio.pause(); else if (btn.classList.contains("on")) audio.play().catch(() => {}); });
+  /* abaixa a música enquanto um vídeo com som toca (YouTube/TikTok) e volta ao normal depois */
+  window.devoeDuck = (src, on) => {
+    const before = ducks.size; on ? ducks.add(src) : ducks.delete(src);
+    if (ducks.size === before && (before === 0) === !on) return;           // nada mudou
+    if (audio && !audio.paused && btn.classList.contains("on")) fade(target(), on ? 600 : 1200);
+  };
   ui(false);
+})();
+
+/* ---------- TikTok com som (card aberto ou tela cheia): abaixa a música do site ---------- */
+(function(){
+  const st = new WeakMap();   // iframe -> {playing, muted}
+  const players = () => [...document.querySelectorAll('iframe[src*="tiktok.com/player/v1/"]')].filter(f => !/controls=0/.test(f.src) && f.isConnected && !f.closest("[hidden]"));
+  addEventListener("message", ev => {
+    if (!/tiktok\.com$/.test((ev.origin || "").replace(/^https?:\/\//, ""))) return;
+    let d = ev.data; try { if (typeof d === "string") d = JSON.parse(d); } catch (e) { return; }
+    if (!d || !d.type) return;
+    const f = players().find(x => x.contentWindow === ev.source); if (!f) return;
+    const s = st.get(f) || { playing: true, muted: false };
+    if (d.type === "onStateChange") s.playing = d.value === 1 || d.value === 3;
+    if (d.type === "onMute") s.muted = !!d.value;
+    st.set(f, s); check();
+  });
+  const check = () => { const on = players().some(f => { const s = st.get(f) || { playing: true, muted: false }; return s.playing && !s.muted; }); window.devoeDuck && window.devoeDuck("tt", on); };
+  setInterval(check, 600);
 })();
 </script>
 </body>
