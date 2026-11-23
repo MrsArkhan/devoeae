@@ -2346,6 +2346,59 @@ body.reel-mini #site>main{z-index:5!important}
 .npanel .nposts .npost:hover{background:rgba(255,255,255,.05)!important}
 .npanel .nposts .npost .nth{flex:0 0 46px!important;width:46px!important;height:60px!important;border-radius:8px!important}
 .npanel .nposts .npost .nbody{display:block!important;text-align:left!important}
+
+/* ===== player do YouTube v2: toque pausa, som no canto, janelinha com controles ===== */
+.reel-yt{display:none!important}
+.reel-frame .reel-tap{position:absolute;inset:0;z-index:2;background:transparent;border:0;padding:0;cursor:pointer;display:grid;place-items:center;-webkit-tap-highlight-color:transparent}
+.reel-frame.offline .reel-tap{display:none}
+.reel-ico{width:64px;height:64px;border-radius:50%;background:rgba(10,10,10,.6);backdrop-filter:blur(6px);opacity:0;transform:scale(.8);transition:opacity .3s,transform .3s var(--ease);background-repeat:no-repeat;background-position:center;background-size:26px}
+.reel-frame.paused .reel-ico,.reel-frame.flash .reel-ico{opacity:1;transform:none}
+.reel-frame.paused .reel-ico{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M8 5.5v13l10.5-6.5z'/%3E%3C/svg%3E")}
+.reel-frame:not(.paused).flash .reel-ico{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23fff' d='M7 5h3.5v14H7zM13.5 5H17v14h-3.5z'/%3E%3C/svg%3E")}
+.reel-frame .reel-ui{left:auto!important;right:14px!important;bottom:14px!important;display:flex;align-items:center;gap:6px;pointer-events:none}
+.reel-frame .reel-ui>*{pointer-events:auto}
+.reel-frame .reel-snd{width:40px!important;height:40px!important;padding:0!important;border-radius:50%!important;justify-content:center;font-size:0!important}
+.reel-snd svg,.rbtn svg{width:18px;height:18px;fill:none;stroke:#fff;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.reel-snd svg path:first-child{fill:#fff}
+.reel-snd .i-on{display:none}.reel-snd.on .i-on{display:block}.reel-snd.on .i-off{display:none}
+.reel-snd.on{border-color:var(--gd)!important}
+.reel-mc{display:none;gap:6px}
+.rbtn{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(10,10,10,.72);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.18);cursor:pointer;padding:0;transition:border-color .3s,background .3s}
+.rbtn:hover{border-color:var(--gd)}
+#reelPP svg path,#reelNext svg path{fill:#fff;stroke:none}
+#reelPP .i-play{display:none}.reel-frame.paused #reelPP .i-play{display:block}.reel-frame.paused #reelPP .i-pause{display:none}
+#reelSize .i-shrink{display:none}.reel-frame.big #reelSize .i-shrink{display:block}.reel-frame.big #reelSize .i-grow{display:none}
+.reel-frame .reel-x{position:absolute;top:8px;right:8px;z-index:4;display:none!important;width:30px;height:30px;border-radius:50%;place-items:center;background:rgba(10,10,10,.75);border:1px solid rgba(255,255,255,.2);color:#fff;font-size:12px;cursor:pointer}
+/* janelinha */
+.reel-frame.mini{z-index:110!important;transition:width .4s var(--ease),height .4s var(--ease)}
+.reel-frame.mini .reel-x{display:grid!important}
+.reel-frame.mini .reel-mc{display:flex}
+.reel-frame.mini .reel-ui{left:8px!important;right:8px!important;bottom:8px!important;justify-content:space-between}
+.reel-frame.mini .reel-snd{width:34px!important;height:34px!important}
+.reel-frame.mini .reel-ico{width:44px;height:44px;background-size:20px}
+.reel-frame.mini.big{width:min(560px,calc(100vw - 48px))!important;height:auto!important;aspect-ratio:16/9}
+@media (max-width:760px){
+  .reel-frame .reel-ui{right:10px!important;bottom:10px!important}
+  .reel-frame .reel-snd{width:34px!important;height:34px!important}
+  .reel-ico{width:52px;height:52px;background-size:22px}
+  .reel-frame.mini{width:220px!important;height:124px!important;inset:auto 10px 78px auto!important}
+  .reel-frame.mini.big{width:calc(100vw - 20px)!important;height:auto!important}
+  .reel-frame.mini .rbtn,.reel-frame.mini .reel-snd{width:30px!important;height:30px!important}
+  .rbtn svg,.reel-snd svg{width:15px;height:15px}
+  .reel-frame.mini .reel-ico{width:38px;height:38px;background-size:16px}
+}
+/* lista dos vídeos longos: rolagem contínua */
+#ytList.flow{scroll-snap-type:none!important;scroll-behavior:auto!important}
+#ytList .yti.clone{}
+
+/* janelinha acima das outras seções (mas abaixo do topo e do menu do celular) */
+body.reel-mini #youtube{z-index:60!important}
+
+/* lista contínua: bordas esmaecidas para a entrada/saída ficar suave */
+@media (min-width:1101px){#ytList.flow{-webkit-mask-image:linear-gradient(180deg,transparent 0,#000 7%,#000 93%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 7%,#000 93%,transparent 100%)}}
+@media (max-width:1100px){#ytList.flow{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%)}}
+/* desempenho: o navegador só desenha estas seções quando chegam perto da tela */
+#design{content-visibility:auto;contain-intrinsic-size:auto 700px}
 </style>
 </head>
 <body>
@@ -2482,11 +2535,16 @@ body.reel-mini #site>main{z-index:5!important}
         <div class="reel-frame" id="reelFrame" data-c="PLAY">
           <img class="reel-poster" id="reelPoster" onerror="this.style.opacity=0" src="https://i.ytimg.com/vi/6Bs8r0ucxm8/maxresdefault.jpg" alt="Vídeo em destaque no YouTube" referrerpolicy="no-referrer">
           <iframe id="reelIframe" referrerpolicy="strict-origin-when-cross-origin" title="Vídeo do YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe>
+          <button class="reel-tap" id="reelTap" aria-label="Pausar ou continuar o vídeo"><span class="reel-ico" aria-hidden="true"></span></button>
           <div class="reel-ui">
-            <button class="reel-snd" id="reelSnd" aria-label="Ativar som">🔇 <span>Ativar som</span></button>
-            <a class="reel-yt" id="reelYt" href="https://youtu.be/6Bs8r0ucxm8" target="_blank" rel="noopener"><svg><use href="#i-yt"/></svg> <span>Assistir no YouTube</span></a>
-            <button class="reel-x" id="reelX" aria-label="Fechar mini player">✕</button>
+            <div class="reel-mc">
+              <button class="rbtn" id="reelPP" aria-label="Pausar"><svg viewBox="0 0 24 24"><path class="i-pause" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/><path class="i-play" d="M8 5.5v13l10.5-6.5z"/></svg></button>
+              <button class="rbtn" id="reelNext" aria-label="Próximo vídeo"><svg viewBox="0 0 24 24"><path d="M6 5.5v13l9-6.5zM16 5.5h2.5v13H16z"/></svg></button>
+              <button class="rbtn" id="reelSize" aria-label="Aumentar janelinha"><svg viewBox="0 0 24 24"><path class="i-grow" d="M4 10V4h6M20 14v6h-6M4 4l6 6M20 20l-6-6"/><path class="i-shrink" d="M10 4v6H4M14 20v-6h6M10 10 4 4M14 14l6 6"/></svg></button>
+            </div>
+            <button class="reel-snd" id="reelSnd" aria-label="Ativar som"><svg viewBox="0 0 24 24"><path d="M4 9h4l5-4v14l-5-4H4z"/><path class="i-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/><path class="i-off" d="M16 9l6 6M22 9l-6 6"/></svg></button>
           </div>
+          <button class="reel-x" id="reelX" aria-label="Fechar janelinha">✕</button>
           <span class="reel-rec"><i></i>PLAY</span>
         </div>
       </div>
@@ -3563,58 +3621,111 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
 (function(){
   const slot = $("#reelSlot"), fr = $("#reelFrame"), ifr = $("#reelIframe"); if (!slot) return;
   const IDS = CONFIG.ytVideos || [];
-  let cur = IDS[0], loaded = false, closed = false, muted = true;
+  let cur = IDS[0], loaded = false, closed = false, muted = true, userPaused = false, ytState = -1, ytMuted = true, ccOff = false;
   const online = /^https?:$/.test(location.protocol);
-  const url = id => `https://www.youtube.com/embed/${id}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${id}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
+  const url = id => `https://www.youtube.com/embed/${id}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${id}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   const cmd = (func, args = []) => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: "command", func, args }), "*"); } catch (e) {} };
-  let ytState = -1, ytMuted = true;
+  const noCaptions = () => { cmd("unloadModule", ["captions"]); cmd("unloadModule", ["cc"]); cmd("setOption", ["captions", "track", {}]); };
   const duckYt = () => window.devoeDuck && window.devoeDuck("yt", ytState === 1 && !muted && !ytMuted && !closed);
+  const setPaused = v => { fr.classList.toggle("paused", v); $("#reelPP").setAttribute("aria-label", v ? "Continuar" : "Pausar"); };
   const listen = () => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: "listening", id: "devoe", channel: "widget" }), "*"); } catch (e) {} };
-  ifr.addEventListener("load", () => { listen(); setTimeout(listen, 800); });
+  ifr.addEventListener("load", () => { listen(); setTimeout(listen, 800); setTimeout(noCaptions, 1200); });
   addEventListener("message", ev => {
-    if (!/youtube(-nocookie)?\.com$/.test((ev.origin || "").replace(/^https?:\/\//, "").replace(/^www\./, "")) || ev.source !== ifr.contentWindow) return;
+    if (ev.source !== ifr.contentWindow) return;
     let d = ev.data; try { if (typeof d === "string") d = JSON.parse(d); } catch (e) { return; }
     if (!d) return;
     if (d.event === "onStateChange" && typeof d.info === "number") ytState = d.info;
     if (d.event === "infoDelivery" && d.info) { if (typeof d.info.playerState === "number") ytState = d.info.playerState; if (typeof d.info.muted === "boolean") ytMuted = d.info.muted; }
+    if (ytState === 1 && !ccOff) { ccOff = true; noCaptions(); }
+    if (ytState === 1) setPaused(false); else if (ytState === 2 && userPaused) setPaused(true);
     duckYt();
   });
+  const play = () => { userPaused = false; setPaused(false); cmd("playVideo"); };
+  const pause = () => { userPaused = true; setPaused(true); cmd("pauseVideo"); setTimeout(duckYt, 50); };
+  const flash = () => { fr.classList.remove("flash"); void fr.offsetWidth; fr.classList.add("flash"); clearTimeout(fr._ft); fr._ft = setTimeout(() => fr.classList.remove("flash"), 650); };
+  const toggle = () => { if (!loaded) return; (userPaused || fr.classList.contains("paused")) ? play() : pause(); flash(); };
   const setVideo = id => {
-    cur = id;
+    cur = id; ccOff = false; ytState = -1;
     $("#reelPoster").src = `https://i.ytimg.com/vi/${id}/maxresdefault.jpg`; $("#reelPoster").classList.remove("off");
-    $("#reelYt").href = `https://youtu.be/${id}`;
     $$("#ytList .yti").forEach(b => b.hidden = b.dataset.id === id);   // o vídeo que está tocando não se repete na lista
+    userPaused = false; setPaused(false);
     if (online) { ifr.src = url(id); loaded = true; ifr.addEventListener("load", () => setTimeout(() => $("#reelPoster").classList.add("off"), 900), { once: true }); }
+    flow && flow.measure();
   };
-  /* lista */
-  $("#ytList").innerHTML = IDS.map((id, i) => `<button class="yti" data-id="${id}"${i === 0 ? " hidden" : ""} aria-label="Assistir vídeo ${i + 1}">
+  /* lista (+ cópias para a rolagem contínua) */
+  const item = (id, i, clone) => `<button class="yti${clone ? " clone" : ""}" data-id="${id}"${i === 0 ? " hidden" : ""}${clone ? ' aria-hidden="true" tabindex="-1"' : ` aria-label="Assistir vídeo ${i + 1}"`}>
       <span class="ytt"><img src="https://i.ytimg.com/vi/${id}/mqdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.style.opacity=0"><i>▶</i></span>
-      <span class="ytm"><b data-t="${id}">Vídeo ${String(i + 1).padStart(2, "0")}</b><small>@devoeae</small></span></button>`).join("")
-;
-  IDS.forEach(id => fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`).then(r => r.json()).then(j => { if (j && j.title) { const el = document.querySelector(`[data-t="${id}"]`); if (el) el.textContent = j.title; } }).catch(() => {}));
-  $$("#ytList .yti[data-id]").forEach(b => b.onclick = () => {
-    if (b.classList.contains("tap")) return;
+      <span class="ytm"><b data-t="${id}">Vídeo ${String(i + 1).padStart(2, "0")}</b><small>@devoeae</small></span></button>`;
+  $("#ytList").innerHTML = IDS.map((id, i) => item(id, i, false)).join("") + IDS.map((id, i) => item(id, i, true)).join("");
+  IDS.forEach(id => fetch(`https://noembed.com/embed?url=https://www.youtube.com/watch?v=${id}`).then(r => r.json()).then(j => { if (j && j.title) $$(`[data-t="${id}"]`).forEach(el => el.textContent = j.title); }).catch(() => {}));
+  $("#ytList").addEventListener("click", ev => {
+    const b = ev.target.closest(".yti"); if (!b || b.classList.contains("tap")) return;
     b.classList.add("tap");                                   // responde ao toque em vermelho primeiro
-    setTimeout(() => { b.classList.remove("tap"); swapTo(b); }, 280);
+    setTimeout(() => { b.classList.remove("tap"); swapTo(b.dataset.id); }, 280);
   });
-  const swapTo = b => {
-    closed = false; setVideo(b.dataset.id);   // o vídeo escolhido vai para o player grande
-    const r = slot.getBoundingClientRect();
-    if (r.top < 70 || r.bottom > innerHeight) scrollTo({ top: r.top + scrollY - 90, behavior: "smooth" });
+  const swapTo = id => {
+    closed = false; setVideo(id);   // o vídeo escolhido vai para o player grande
+    if (!fr.classList.contains("mini")) { const r = slot.getBoundingClientRect(); if (r.top < 70 || r.bottom > innerHeight) scrollTo({ top: r.top + scrollY - 90, behavior: "smooth" }); }
     fr.classList.remove("swap"); void fr.offsetWidth; fr.classList.add("swap");
   };
   if (!online) { fr.classList.add("offline"); fr.addEventListener("click", () => window.open(`https://youtu.be/${cur}`, "_blank")); }
+  /* controles */
+  const stop = e => { e.stopPropagation(); e.preventDefault(); };
+  $("#reelTap").addEventListener("click", e => { stop(e); toggle(); });
+  $("#reelPP").addEventListener("click", e => { stop(e); toggle(); });
+  $("#reelNext").addEventListener("click", e => { stop(e); const k = IDS.indexOf(cur); swapTo(IDS[(k + 1) % IDS.length]); });
+  $("#reelSize").addEventListener("click", e => { stop(e); fr.classList.toggle("big"); $("#reelSize").setAttribute("aria-label", fr.classList.contains("big") ? "Diminuir janelinha" : "Aumentar janelinha"); });
+  $("#reelSnd").addEventListener("click", e => { stop(e); muted = !muted; cmd(muted ? "mute" : "unMute"); if (!muted) { cmd("setVolume", [70]); if (userPaused) play(); }
+    ytMuted = muted; $("#reelSnd").classList.toggle("on", !muted); $("#reelSnd").setAttribute("aria-label", muted ? "Ativar som" : "Desativar som"); duckYt(); });
+  const unmini = () => { fr.classList.remove("mini", "big"); document.body.classList.remove("reel-mini"); };
+  $("#reelX").addEventListener("click", e => { stop(e); closed = true; unmini(); cmd("pauseVideo"); duckYt(); });
   new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && !loaded && online) setVideo(cur); }), { rootMargin: "500px 0px" }).observe(slot);
   new IntersectionObserver(es => es.forEach(en => {
     if (!loaded) return;
-    if (en.isIntersecting) { fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("playVideo"); }
-    else if (en.boundingClientRect.top < 0 && !closed && !$("#site").hidden) { fr.classList.add("mini"); document.body.classList.add("reel-mini"); cmd("playVideo"); }
-    else { fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("pauseVideo"); }
+    if (en.isIntersecting) { unmini(); if (!userPaused) cmd("playVideo"); }
+    else if (en.boundingClientRect.top < 0 && !closed && !$("#site").hidden) { fr.classList.add("mini"); document.body.classList.add("reel-mini"); if (!userPaused) cmd("playVideo"); }
+    else { unmini(); cmd("pauseVideo"); }
   }), { threshold: .25 }).observe(slot);
-  $("#reelSnd").onclick = e => { e.stopPropagation(); muted = !muted; cmd(muted ? "mute" : "unMute"); if (!muted) cmd("setVolume", [70]); ytMuted = muted; duckYt();
-    $("#reelSnd").innerHTML = muted ? "🔇 <span>Ativar som</span>" : "🔊 <span>Som ativo</span>"; };
-  $("#reelX").onclick = e => { e.stopPropagation(); closed = true; window.devoeDuck && window.devoeDuck("yt", false); fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("pauseVideo"); };
-  addEventListener("hashchange", () => { if (location.hash === "#ascom") { fr.classList.remove("mini"); document.body.classList.remove("reel-mini"); cmd("pauseVideo"); } });
+  addEventListener("hashchange", () => { if (location.hash === "#ascom") { unmini(); cmd("pauseVideo"); } });
+
+  /* rolagem contínua e devagar da lista (PC: vertical · celular: horizontal) */
+  const list = $("#ytList");
+  var flow = (function(){
+    const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    let pos = 0, half = 0, horiz = false, hold = false, holdT = 0, last = 0, vis = false, running = false;
+    const measure = () => {
+      horiz = list.scrollWidth - list.clientWidth > list.scrollHeight - list.clientHeight || getComputedStyle(list).gridAutoFlow === "column" || getComputedStyle(list).flexDirection === "row";
+      const firstClone = list.querySelector(".yti.clone:not([hidden])"), first = list.querySelector(".yti:not(.clone):not([hidden])");
+      if (!firstClone || !first) { half = 0; return; }
+      half = horiz ? firstClone.offsetLeft - first.offsetLeft : firstClone.offsetTop - first.offsetTop;
+      pos = horiz ? list.scrollLeft : list.scrollTop;
+    };
+    const tick = now => {
+      if (!running) return;
+      const dt = Math.min(64, now - (last || now)); last = now;
+      if (!hold && vis && half > 0) {
+        pos += (horiz ? 26 : 20) * dt / 1000;
+        if (pos >= half) pos -= half;
+        if (horiz) list.scrollLeft = pos; else list.scrollTop = pos;
+      }
+      requestAnimationFrame(tick);
+    };
+    const start = () => { if (running || reduce) return; running = true; last = 0; requestAnimationFrame(tick); };
+    const stopRun = () => { running = false; };
+    const pauseFor = ms => { hold = true; clearTimeout(holdT); if (ms) holdT = setTimeout(() => { measure(); hold = false; }, ms); };
+    list.classList.add("flow");
+    list.addEventListener("mouseenter", () => pauseFor(0));
+    list.addEventListener("mouseleave", () => { measure(); hold = false; });
+    list.addEventListener("touchstart", () => pauseFor(0), { passive: true });
+    list.addEventListener("touchend", () => pauseFor(1500), { passive: true });
+    list.addEventListener("wheel", () => pauseFor(1500), { passive: true });
+    list.addEventListener("scroll", () => { if (!hold) return; const p = horiz ? list.scrollLeft : list.scrollTop;
+      if (half > 0 && p >= half) { if (horiz) list.scrollLeft = p - half; else list.scrollTop = p - half; } else if (half > 0 && p <= 0) { if (horiz) list.scrollLeft = p + half; else list.scrollTop = p + half; } }, { passive: true });
+    new IntersectionObserver(es => es.forEach(en => { vis = en.isIntersecting; if (vis) { measure(); start(); } else stopRun(); })).observe(list);
+    addEventListener("resize", () => measure());
+    document.addEventListener("visibilitychange", () => { if (document.hidden) stopRun(); else if (vis) start(); });
+    return { measure };
+  })();
 })();
 
 addEventListener("hashchange", route);
@@ -3647,38 +3758,6 @@ route();
   set(50);
 })();
 
-/* ---------- vídeos longos: lista gira sozinha (mesmo ritmo do carrossel do TikTok) ---------- */
-(function(){
-  const list = $("#ytList"); if (!list) return;
-  let paused = false, lastUser = 0, dir = 1, tx0 = null, tRes;
-  const EASE = "cubic-bezier(.16,1,.3,1)";
-  const rotate = d => {
-    const items = [...list.children].filter(b => !b.hidden); if (items.length < 2) return;
-    const before = new Map(items.map(b => [b, b.getBoundingClientRect()]));
-    const moved = d > 0 ? items[0] : items[items.length - 1];
-    if (d > 0) list.appendChild(moved); else list.insertBefore(moved, list.firstChild);
-    items.forEach(b => {
-      const o = before.get(b), r = b.getBoundingClientRect();
-      if (b === moved) { b.animate([{ opacity: 0, transform: `translate(${d > 0 ? 0 : 0}px, ${innerWidth > 760 ? (d > 0 ? 14 : -14) : 0}px) scale(.96)` }, { opacity: 1, transform: "none" }], { duration: 650, easing: EASE }); return; }
-      const dx = o.left - r.left, dy = o.top - r.top; if (!dx && !dy) return;
-      b.animate([{ transform: `translate(${dx}px, ${dy}px)` }, { transform: "none" }], { duration: 650, easing: EASE });
-    });
-  };
-  list.addEventListener("mouseenter", () => paused = true);
-  list.addEventListener("mouseleave", () => { paused = false; lastUser = performance.now(); });
-  list.addEventListener("touchstart", ev => { paused = true; clearTimeout(tRes); tx0 = ev.touches[0].clientX; }, { passive: true });
-  list.addEventListener("touchmove", ev => { if (tx0 === null) return; const dx = ev.touches[0].clientX - tx0; if (Math.abs(dx) > 12) dir = dx < 0 ? 1 : -1; }, { passive: true });
-  const resume = () => { tx0 = null; clearTimeout(tRes); tRes = setTimeout(() => { paused = false; lastUser = performance.now(); }, 800); };
-  list.addEventListener("touchend", resume, { passive: true }); list.addEventListener("touchcancel", resume, { passive: true });
-  list.addEventListener("click", () => { lastUser = performance.now(); });
-  setInterval(() => {
-    const r = list.getBoundingClientRect();
-    if (paused || document.hidden || r.top > innerHeight || r.bottom < 0) return;
-    if (performance.now() - lastUser < 1800) return;
-    if (list.querySelector(".yti.tap")) return;
-    rotate(dir);
-  }, 2200);
-})();
 
 /* ---------- Por trás da edição: cartas saem do baralho, "renderizam" e flutuam com parallax ---------- */
 (function(){
@@ -3736,7 +3815,7 @@ route();
 /* ---------- música de fundo: baixinha, começa no primeiro toque, botão liga/desliga ---------- */
 (function(){
   const btn = document.getElementById("sbtn"); if (!btn) return;
-  const VOL = 0.12, DUCK = 0.035, KEY = "devoe-som";
+  const VOL = 0.2, DUCK = 0.06, KEY = "devoe-som";
   const ducks = new Set(); const target = () => ducks.size ? DUCK : VOL;
   let audio = null, wanted = true, fadeT = 0;
   try { wanted = localStorage.getItem(KEY) !== "off"; } catch (_) {}
