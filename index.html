@@ -2967,6 +2967,7 @@ const IMG = {"thumbs": ["data:image/webp;base64,UklGRgqDAABXRUJQVlA4IP6CAACwrwKd
    ========================================================= */
 const CONFIG = {
   ascomCode: "ASCOM2026",
+  requireLogin: false,   // true = pede login com Google antes de liberar a área ASCOM
   instagram: "ansdesignerr",            // perfil exibido na página ASCOM e nos links
   instagramPosts: [],                   // opcional: links de posts, ex.: "https://www.instagram.com/p/XXXXXXX/"
   tiktokUser: "devoe.ae",
@@ -3344,6 +3345,7 @@ $("#cform").addEventListener("submit", ev => {
     st.forEach((d, i) => d.classList.toggle("on", i === 0));
     m.className = "msg ok"; m.textContent = "CÓDIGO CORRETO — FAÇA LOGIN";
     /* o login com Google e a aprovação da numérica liberam a entrada */
+    if (!CONFIG.requireLogin) { go(); return; }
     let tries = 0;
     const call = () => { if (window.devoeGate) return window.devoeGate(go);
       if (++tries > 40) { m.className = "msg no"; m.textContent = "SEM CONEXÃO — TENTE NOVAMENTE"; return; }
