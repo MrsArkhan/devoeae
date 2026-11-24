@@ -2535,6 +2535,12 @@ body.reel-mini #youtube{z-index:60!important}
 .glink{text-decoration:none!important;color:#7a7a7a!important;font-size:12px!important}
 .glink:hover{color:#bbb!important}
 @media (max-width:760px){.gbox{padding:24px 18px 18px!important}.gnum{height:68px}.gnum input{font-size:34px}}
+
+/* botão "Abrir no TikTok" sobre o player (aparece principalmente no celular) */
+.ttapp{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);z-index:6;padding:9px 16px;border-radius:999px;background:rgba(10,10,10,.82);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.2);color:#fff;font:700 12px var(--tx);text-decoration:none;white-space:nowrap;opacity:0;pointer-events:none;transition:opacity .3s}
+.ttfb .ttapp{opacity:1;pointer-events:auto}
+@media (hover:none){.ttapp{opacity:.95;pointer-events:auto;bottom:auto;top:10px;left:10px;transform:none;padding:7px 12px;font-size:11px}}
+#mbox{position:relative}
 </style>
 </head>
 <body>
@@ -3154,6 +3160,19 @@ function mountCover(el, idx){
       el.insertAdjacentHTML("afterbegin", `<iframe class="pv" src="${previewUrl(e.id)}" tabindex="-1" loading="lazy" title="Prévia: ${esc(e.title)}"></iframe>`);
   }, 3000);
 }
+/* TikTok no celular: se o player não responder, troca para o embed clássico e oferece abrir no app */
+const TT_READY = new WeakSet();
+addEventListener("message", ev => { if (!/tiktok\.com$/.test((ev.origin || "").replace(/^https?:\/\//, ""))) return;
+  document.querySelectorAll('iframe[data-tt]').forEach(f => { if (f.contentWindow === ev.source) TT_READY.add(f); }); });
+function ttWatch(box, id){
+  const f = box.querySelector("iframe"); if (!f) return;
+  f.dataset.tt = id;
+  if (!box.querySelector(".ttapp")) box.insertAdjacentHTML("beforeend", `<a class="ttapp" href="${ttUrl(id)}" target="_blank" rel="noopener">Abrir no TikTok ↗</a>`);
+  setTimeout(() => {
+    if (!f.isConnected || TT_READY.has(f)) return;
+    if (f.src.includes("/player/v1/")) { f.src = `https://www.tiktok.com/embed/v2/${id}?lang=pt-BR`; box.classList.add("ttfb"); }
+  }, 5000);
+}
 function playInline(el){
   const idx = +el.dataset.idx;
   if (el.classList.contains("playing")) return;
@@ -3165,6 +3184,8 @@ function playInline(el){
   el.innerHTML = `<iframe src="${playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="${esc(e.title)}"></iframe>
     <button class="stop" aria-label="Parar vídeo">✕</button>`;
   el.querySelector(".stop").addEventListener("click", ev => { ev.stopPropagation(); stopCurrent(); });
+  ttWatch(el, e.id);
+  const ap = el.querySelector(".ttapp"); if (ap) ap.addEventListener("click", ev => ev.stopPropagation());
   current = { el, idx };
 }
 function bindFrame(el, idx){
@@ -3178,6 +3199,7 @@ function openModal(idx){
   stopCurrent();
   const e = CONFIG.edits[idx];
   $("#mbox").innerHTML = `<iframe src="${playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="${esc(e.title)}"></iframe>`;
+  ttWatch($("#mbox"), e.id);
   $("#mgo").href = ttUrl(e.id);
   $("#modal").classList.add("on");
 }
