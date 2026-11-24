@@ -83,16 +83,16 @@ header{position:sticky;top:0;z-index:10;background:rgba(10,10,10,.85);backdrop-f
 
 <main class="wrap" id="vApp" hidden>
   <div class="stats">
-    <div class="st hl"><b id="sPend">0</b><span>Pedidos pendentes</span></div>
-    <div class="st"><b id="sAppr">0</b><span>Alunos aprovados</span></div>
+    <div class="st hl"><b id="sAppr">0</b><span>Alunos com acesso</span></div>
+    <div class="st"><b id="sPend">0</b><span>Bloqueados</span></div>
     <div class="st"><b id="sUsers">0</b><span>Contas que já logaram</span></div>
     <div class="st"><b id="sToday">0</b><span>Logins hoje</span></div>
   </div>
   <div class="bar">
     <div class="tabs" id="tabs">
-      <button data-t="pending" class="on">Pendentes <i id="cPend">0</i></button>
-      <button data-t="approved">Aprovados <i id="cAppr">0</i></button>
-      <button data-t="denied">Recusados <i id="cDen">0</i></button>
+      <button data-t="approved" class="on">Com acesso <i id="cAppr">0</i></button>
+      <button data-t="denied">Bloqueados <i id="cDen">0</i></button>
+      <button data-t="pending">Pendentes <i id="cPend">0</i></button>
       <button data-t="logins">Histórico de logins <i id="cLog">0</i></button>
     </div>
     <input class="search" id="q" placeholder="Buscar nome, e-mail ou numérica…">
@@ -112,7 +112,7 @@ const view = v => ["vLoad", "vLogin", "vDenied", "vApp"].forEach(id => $("#" + i
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = ts => { if (!ts || !ts.toDate) return "—"; const d = ts.toDate(); return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); };
 const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 2200); };
-let REQ = [], LOG = [], USERS = 0, tab = "pending", subs = [];
+let REQ = [], LOG = [], USERS = 0, tab = "approved", subs = [];
 const login = async () => { const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" }); try { await signInWithPopup(auth, p); } catch (e) { if (e.code !== "auth/popup-closed-by-user") toast("Não foi possível entrar."); } };
 $("#login").onclick = login; $("#swap").onclick = async () => { await signOut(auth); login(); }; $("#out").onclick = () => signOut(auth);
 const stop = () => { subs.forEach(u => u()); subs = []; };
@@ -126,12 +126,12 @@ onAuthStateChanged(auth, u => {
   subs.push(onSnapshot(query(collection(db, "logins"), orderBy("at", "desc"), limit(300)), s => { LOG = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); }, () => {}));
   subs.push(onSnapshot(collection(db, "users"), s => { USERS = s.size; draw(); }, () => {}));
 });
-const setStatus = async (id, status) => { try { await updateDoc(doc(db, "requests", id), { status, decidedAt: serverTimestamp() }); toast(status === "approved" ? "Acesso aprovado ✓" : status === "denied" ? "Pedido recusado" : "Atualizado"); } catch (e) { toast("Erro ao salvar"); console.warn(e); } };
-const remove = async id => { if (!confirm("Remover este pedido? A pessoa vai precisar pedir acesso de novo.")) return; try { await deleteDoc(doc(db, "requests", id)); toast("Pedido removido"); } catch (e) { toast("Erro ao remover"); } };
+const setStatus = async (id, status) => { try { await updateDoc(doc(db, "requests", id), { status, decidedAt: serverTimestamp() }); toast(status === "approved" ? "Acesso liberado ✓" : status === "denied" ? "Acesso bloqueado" : "Atualizado"); } catch (e) { toast("Erro ao salvar"); console.warn(e); } };
+const remove = async id => { if (!confirm("Apagar este registro? Se a pessoa logar de novo, ela entra automaticamente. Para impedir a entrada, use Bloquear acesso.")) return; try { await deleteDoc(doc(db, "requests", id)); toast("Pedido removido"); } catch (e) { toast("Erro ao remover"); } };
 const draw = () => {
   const by = s => REQ.filter(r => r.status === s);
   const today = new Date(); today.setHours(0, 0, 0, 0);
-  $("#sPend").textContent = $("#cPend").textContent = by("pending").length;
+  $("#cPend").textContent = by("pending").length; $("#sPend").textContent = by("denied").length;
   $("#sAppr").textContent = $("#cAppr").textContent = by("approved").length;
   $("#cDen").textContent = by("denied").length; $("#cLog").textContent = LOG.length;
   $("#sUsers").textContent = USERS; $("#sToday").textContent = LOG.filter(l => l.at && l.at.toDate && l.at.toDate() >= today).length;
@@ -143,11 +143,11 @@ const draw = () => {
       <div class="meta"><span>🕒 ${fmt(l.at)}</span><span>📱 ${esc(l.device || "—")}</span><span>🌐 ${esc((l.lang || "pt").toUpperCase())}</span></div></div></div>`).join("") || `<div class="empty">Nenhum login registrado ainda.</div>`;
   } else {
     const rows = by(tab).filter(hit);
-    const lab = { pending: ["p", "Pendente"], approved: ["a", "Aprovado"], denied: ["d", "Recusado"] };
+    const lab = { pending: ["p", "Pendente"], approved: ["a", "Com acesso"], denied: ["d", "Bloqueado"] };
     html = rows.map(r => `<div class="row"><img src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer"><div><div class="nm">${esc(r.name || "Sem nome")}</div><div class="em">${esc(r.email)}</div>
-      <div class="meta"><span class="tag num">Numérica ${esc(r.numerica)}</span><span class="tag ${lab[r.status][0]}">${lab[r.status][1]}</span><span>Pedido: ${fmt(r.createdAt)}</span>${r.decidedAt ? `<span>Decisão: ${fmt(r.decidedAt)}</span>` : ""}</div></div>
-      <div class="acts">${r.status !== "approved" ? `<button class="btn sm ok" data-a="approved" data-id="${r.id}">✓ Aprovar</button>` : ""}${r.status === "pending" ? `<button class="btn sm no" data-a="denied" data-id="${r.id}">✕ Recusar</button>` : ""}${r.status === "approved" ? `<button class="btn sm no" data-a="denied" data-id="${r.id}">Revogar acesso</button>` : ""}<button class="btn sm" data-del="${r.id}">Remover</button></div></div>`).join("")
-      || `<div class="empty">${{ pending: "Nenhum pedido pendente. 🎉", approved: "Ninguém aprovado ainda.", denied: "Nenhum pedido recusado." }[tab]}</div>`;
+      <div class="meta"><span class="tag num">Numérica ${esc(r.numerica)}</span><span class="tag ${lab[r.status][0]}">${lab[r.status][1]}</span><span>Entrou: ${fmt(r.createdAt)}</span>${r.decidedAt ? `<span>Decisão: ${fmt(r.decidedAt)}</span>` : ""}</div></div>
+      <div class="acts">${r.status !== "approved" ? `<button class="btn sm ok" data-a="approved" data-id="${r.id}">✓ ${r.status === "denied" ? "Desbloquear" : "Liberar"}</button>` : ""}${r.status !== "denied" ? `<button class="btn sm no" data-a="denied" data-id="${r.id}">⛔ Bloquear acesso</button>` : ""}<button class="btn sm" data-del="${r.id}" title="Apaga o registro; a pessoa entra de novo no próximo login">Apagar registro</button></div></div>`).join("")
+      || `<div class="empty">${{ pending: "Nenhum pedido pendente.", approved: "Ninguém entrou ainda.", denied: "Ninguém bloqueado." }[tab]}</div>`;
   }
   $("#list").innerHTML = html;
 };

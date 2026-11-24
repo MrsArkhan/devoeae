@@ -2596,9 +2596,9 @@ body.reel-mini #youtube{z-index:60!important}
     <div class="gstep" data-s="num">
       <div class="guser"><img id="gAv" alt=""><div><b id="gName"></b><small id="gMail"></small></div></div>
       <h3 class="gh">Informe sua numérica</h3>
-      <p class="gp">O instrutor vai conferir e liberar o seu acesso.</p>
+      <p class="gp">Só para identificação. O acesso é liberado na hora.</p>
       <input class="ginp" id="gNum" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Ex.: 1234" aria-label="Numérica">
-      <button class="gbtn" id="gSend">Solicitar acesso</button>
+      <button class="gbtn" id="gSend">Entrar na área ASCOM</button>
       <button class="glink" data-out>Usar outra conta</button>
     </div>
     <div class="gstep" data-s="pending">
@@ -2610,8 +2610,7 @@ body.reel-mini #youtube{z-index:60!important}
     </div>
     <div class="gstep" data-s="denied">
       <h3 class="gh">Acesso não autorizado</h3>
-      <p class="gp">Seu pedido não foi aprovado. Confira a numérica e envie de novo.</p>
-      <button class="gbtn" id="gRetry">Corrigir numérica</button>
+      <p class="gp">Seu acesso foi bloqueado pelo instrutor. Se achar que é um engano, fale com ele.</p>
       <button class="glink" data-out>Usar outra conta</button>
     </div>
     <div class="gstep" data-s="error">
@@ -4142,10 +4141,10 @@ route();
 "Conectando…":["Connecting…","Conectando…"],"Código correto · ASCOM":["Correct code · ASCOM","Código correcto · ASCOM"],"Entre para continuar":["Sign in to continue","Inicia sesión para continuar"],
 "Faça login com sua conta Google para pedir acesso ao material de apoio.":["Sign in with your Google account to request access to the support material.","Inicia sesión con tu cuenta de Google para solicitar acceso al material de apoyo."],
 "Entrar com Google":["Sign in with Google","Iniciar sesión con Google"],"Seu nome, e-mail e numérica ficam registrados apenas para controle de acesso do curso.":["Your name, email and student number are stored only for course access control.","Tu nombre, correo y número de alumno se guardan solo para el control de acceso del curso."],
-"Informe sua numérica":["Enter your student number","Ingresa tu número de alumno"],"O instrutor vai conferir e liberar o seu acesso.":["The instructor will check it and grant your access.","El instructor lo revisará y liberará tu acceso."],
+"Informe sua numérica":["Enter your student number","Ingresa tu número de alumno"],"Só para identificação. O acesso é liberado na hora.":["Just for identification. Access is granted right away.","Solo para identificación. El acceso se libera al instante."],"Entrar na área ASCOM":["Enter the ASCOM area","Entrar al área ASCOM"],
 "Solicitar acesso":["Request access","Solicitar acceso"],"Usar outra conta":["Use another account","Usar otra cuenta"],"Pedido enviado!":["Request sent!","¡Solicitud enviada!"],
 "Aguardando aprovação do instrutor. Assim que for liberado, o acesso abre sozinho.":["Waiting for the instructor's approval. Once approved, access opens automatically.","Esperando la aprobación del instructor. Cuando sea aprobada, el acceso se abre solo."],
-"Numérica":["Student number","Número de alumno"],"Acesso não autorizado":["Access not authorized","Acceso no autorizado"],"Seu pedido não foi aprovado. Confira a numérica e envie de novo.":["Your request wasn't approved. Check your student number and send it again.","Tu solicitud no fue aprobada. Revisa tu número y envíalo de nuevo."],
+"Numérica":["Student number","Número de alumno"],"Acesso não autorizado":["Access not authorized","Acceso no autorizado"],"Seu acesso foi bloqueado pelo instrutor. Se achar que é um engano, fale com ele.":["Your access was blocked by the instructor. If you think this is a mistake, talk to him.","Tu acceso fue bloqueado por el instructor. Si crees que es un error, habla con él."],
 "Corrigir numérica":["Fix student number","Corregir número"],"Não foi possível conectar":["Couldn't connect","No se pudo conectar"],"Verifique sua internet e tente de novo.":["Check your internet and try again.","Revisa tu internet e inténtalo de nuevo."],"Tentar de novo":["Try again","Intentar de nuevo"]
   };
   const PACK = {"ARBUSTO":["BUSH","ARBUSTO"],"BAMBU":["BAMBOO","BAMBÚ"],"BARRIL":["BARREL","BARRIL"],"CAIXA DE SOM":["SPEAKER","ALTAVOZ"],"CANHÃO DE LUZ":["SPOTLIGHT","CAÑÓN DE LUZ"],"CORDA":["ROPE","CUERDA"],"CORRENTE":["CHAIN","CADENA"],"ESTRUTURA DE FERRO":["IRON TRUSS","ESTRUCTURA DE HIERRO"],"PLACA DE MADEIRA":["WOODEN SIGN","LETRERO DE MADERA"],"PORTAL":["PORTAL","PORTAL"],"PLACA DE FERRO":["IRON SIGN","LETRERO DE HIERRO"],"LÂMPADA":["LIGHT BULB","BOMBILLA"],"VEÍCULOS":["VEHICLES","VEHÍCULOS"],"NEON":["NEON","NEÓN"],"PLACA DE NEON":["NEON SIGN","LETRERO DE NEÓN"],"FOGO":["FIRE","FUEGO"],"BACKGROUND":["BACKGROUND","FONDO"]};
@@ -4277,12 +4276,11 @@ $("#gSend").onclick = async () => {
   const n = $("#gNum").value.replace(/\D/g, "");
   if (n.length < 1) { $("#gNum").classList.remove("err"); void $("#gNum").offsetWidth; $("#gNum").classList.add("err"); return; }
   $("#gSend").disabled = true;
-  try { await setDoc(doc(db, "requests", user.uid), { uid: user.uid, name: user.displayName || "", email: user.email || "", photo: user.photoURL || "", numerica: n, status: "pending", createdAt: serverTimestamp() }); }
+  try { await setDoc(doc(db, "requests", user.uid), { uid: user.uid, name: user.displayName || "", email: user.email || "", photo: user.photoURL || "", numerica: n, status: "approved", auto: true, createdAt: serverTimestamp() }); }
   catch (e) { $("#gErr").textContent = "Não foi possível enviar o pedido. Tente de novo."; step("error"); console.warn(e); }
   $("#gSend").disabled = false;
 };
 $("#gNum").addEventListener("keydown", e => { if (e.key === "Enter") $("#gSend").click(); });
-$("#gRetry").onclick = () => { fillUser(user); $("#gNum").value = ""; step("num"); };
 $("#gTry").onclick = () => user ? watch(user) : step("login");
 gate.querySelectorAll("[data-out]").forEach(b => b.onclick = async () => { if (unsub) { unsub(); unsub = null; } await signOut(auth); step("login"); });
 $("#gX").onclick = close;
