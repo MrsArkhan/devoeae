@@ -3847,7 +3847,7 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
   const slot = $("#reelSlot"), fr = $("#reelFrame"), ifr = $("#reelIframe"); if (!slot) return;
   const IDS = CONFIG.ytVideos || [];
   const active = () => !!(navigator.userActivation && navigator.userActivation.hasBeenActive);
-  let cur = IDS[0], loaded = false, closed = false, muted = !active(), userMuted = false, userPaused = false, ytState = -1, ytMuted = !active(), ccOff = false;
+  let cur = IDS[0], loaded = false, closed = false, muted = true, userPaused = false, ytState = -1, ytMuted = true, ccOff = false, ytVol = 0, ytFadeT = 0;
   const online = /^https?:$/.test(location.protocol);
   const url = id => `https://www.youtube.com/embed/${id}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${id}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   const cmd = (func, args = []) => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: "command", func, args }), "*"); } catch (e) {} };
@@ -3902,14 +3902,15 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
   $("#reelNext").addEventListener("click", e => { stop(e); const k = IDS.indexOf(cur); swapTo(IDS[(k + 1) % IDS.length]); });
   $("#reelSize").addEventListener("click", e => { stop(e); fr.classList.toggle("big"); $("#reelSize").setAttribute("aria-label", fr.classList.contains("big") ? "Diminuir janelinha" : "Aumentar janelinha"); });
   const sndUi = () => { $("#reelSnd").classList.toggle("on", !muted); $("#reelSnd").setAttribute("aria-label", muted ? "Ativar som" : "Desativar som"); };
-  const unmute = () => { muted = false; ytMuted = false; cmd("unMute"); cmd("setVolume", [65]); sndUi(); duckYt(); };
-  /* o vídeo já vem com som: se o navegador obrigou a começar mudo, liga o som no primeiro toque na página */
-  const firstGesture = () => { ["pointerdown","keydown","touchstart"].forEach(t => removeEventListener(t, firstGesture, true)); if (muted && !userMuted) { unmute(); setTimeout(unmute, 900); } };
-  if (muted) ["pointerdown","keydown","touchstart"].forEach(t => addEventListener(t, firstGesture, { capture: true, passive: true }));
-  ifr.addEventListener("load", () => { if (!muted) setTimeout(unmute, 700); });
+  /* volume do YouTube sobe/desce suave (o vídeo sempre começa mudo) */
+  const ytFade = (to, ms, done) => { clearInterval(ytFadeT); const from = ytVol, t0 = performance.now();
+    ytFadeT = setInterval(() => { const u = Math.min(1, (performance.now() - t0) / ms), e = u < .5 ? 2 * u * u : 1 - Math.pow(-2 * u + 2, 2) / 2;
+      ytVol = Math.round(from + (to - from) * e); cmd("setVolume", [ytVol]); if (u >= 1) { clearInterval(ytFadeT); done && done(); } }, 60); };
+  const soundOn = () => { muted = false; ytMuted = false; ytVol = 0; cmd("setVolume", [0]); cmd("unMute"); if (userPaused) play(); ytFade(70, 1600); sndUi(); duckYt(); };
+  const soundOff = () => { muted = true; ytMuted = true; sndUi(); duckYt(); ytFade(0, 1200, () => { if (muted) cmd("mute"); }); };
+  ifr.addEventListener("load", () => { if (!muted) setTimeout(() => { ytVol = 0; cmd("setVolume", [0]); cmd("unMute"); ytFade(70, 1600); }, 700); });
   sndUi();
-  $("#reelSnd").addEventListener("click", e => { stop(e); userMuted = !muted; muted = !muted; cmd(muted ? "mute" : "unMute"); if (!muted) { cmd("setVolume", [70]); if (userPaused) play(); }
-    ytMuted = muted; $("#reelSnd").classList.toggle("on", !muted); $("#reelSnd").setAttribute("aria-label", muted ? "Ativar som" : "Desativar som"); duckYt(); });
+  $("#reelSnd").addEventListener("click", e => { stop(e); muted ? soundOn() : soundOff(); });
   const unmini = () => { fr.classList.remove("mini", "big"); document.body.classList.remove("reel-mini"); };
   $("#reelX").addEventListener("click", e => { stop(e); closed = true; unmini(); cmd("pauseVideo"); duckYt(); });
   new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && !loaded && online) setVideo(cur); }), { rootMargin: "500px 0px" }).observe(slot);
@@ -4048,7 +4049,7 @@ route();
 /* ---------- música de fundo: baixinha, começa no primeiro toque, botão liga/desliga ---------- */
 (function(){
   const btn = document.getElementById("sbtn"); if (!btn) return;
-  const VOL = 0.2, DUCK = 0.06, KEY = "devoe-som";
+  const VOL = 0.2, DUCK = 0, KEY = "devoe-som";
   const ducks = new Set(); const target = () => ducks.size ? DUCK : VOL;
   let audio = null, wanted = true, fadeT = 0;
   try { wanted = localStorage.getItem(KEY) !== "off"; } catch (_) {}
