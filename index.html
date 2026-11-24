@@ -2552,6 +2552,17 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .vf.playing{overflow:hidden}
 #mbox{overflow:hidden}
 #mbox video.lv{z-index:3}
+
+/* turma do CFA */
+.gturma{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.gturma button{height:62px;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:#0b0b0b;color:#9a9a9a;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:border-color .25s,background .25s,color .25s,transform .2s}
+.gturma button b{font:900 italic 22px/1 var(--hd);color:#e8e8e8;letter-spacing:.02em}
+.gturma button small{font:700 9px var(--tx);letter-spacing:.22em}
+.gturma button:hover{border-color:rgba(217,169,0,.5)}
+.gturma button[aria-checked="true"]{border-color:var(--gd);background:rgba(217,169,0,.1);color:var(--gd2);box-shadow:0 0 0 3px rgba(217,169,0,.1)}
+.gturma button[aria-checked="true"] b{color:var(--gd2)}
+.gturma button:active{transform:scale(.96)}
+.gturma.err button{border-color:rgba(255,77,77,.6);animation:shake .4s}
 </style>
 </head>
 <body>
@@ -2634,8 +2645,14 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
     </div>
     <div class="gstep" data-s="num">
       <div class="guser"><img id="gAv" alt="" referrerpolicy="no-referrer"><div><b id="gName"></b><small id="gMail"></small></div><span class="gok">✓</span></div>
-      <h3 class="gh2">Qual é a sua numérica?</h3>
-      <p class="gp2">Usada só para identificação. O acesso é liberado na hora.</p>
+      <h3 class="gh2">Sua turma e numérica</h3>
+      <p class="gp2">Usadas só para identificação. O acesso é liberado na hora.</p>
+      <div class="gturma" role="radiogroup" aria-label="Turma do CFA">
+        <button type="button" role="radio" aria-checked="false" data-c="I CFA"><b>I</b><small>CFA</small></button>
+        <button type="button" role="radio" aria-checked="false" data-c="II CFA"><b>II</b><small>CFA</small></button>
+        <button type="button" role="radio" aria-checked="false" data-c="III CFA"><b>III</b><small>CFA</small></button>
+        <button type="button" role="radio" aria-checked="false" data-c="IV CFA"><b>IV</b><small>CFA</small></button>
+      </div>
       <label class="gnum"><span>Nº</span><input id="gNum" inputmode="numeric" autocomplete="off" maxlength="3" placeholder="00" aria-label="Numérica"></label>
       <button class="gbtn" id="gSend">Entrar na área ASCOM <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></button>
       <button class="glink" data-out>Usar outra conta</button>
@@ -2644,7 +2661,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
       <div class="gspin"></div>
       <h3 class="gh">Pedido enviado!</h3>
       <p class="gp">Aguardando aprovação do instrutor. Assim que for liberado, o acesso abre sozinho.</p>
-      <p class="gtag">Numérica <b id="gNumShow"></b></p>
+      <p class="gtag"><b id="gNumShow"></b></p>
       <button class="glink" data-out>Usar outra conta</button>
     </div>
     <div class="gstep" data-s="denied">
@@ -4230,7 +4247,7 @@ route();
 "Faça login com sua conta Google para pedir acesso ao material de apoio.":["Sign in with your Google account to request access to the support material.","Inicia sesión con tu cuenta de Google para solicitar acceso al material de apoyo."],
 "Entrar com Google":["Sign in with Google","Iniciar sesión con Google"],"Seu nome, e-mail e numérica ficam registrados apenas para controle de acesso do curso.":["Your name, email and student number are stored only for course access control.","Tu nombre, correo y número de alumno se guardan solo para el control de acceso del curso."],
 "Informe sua numérica":["Enter your student number","Ingresa tu número de alumno"],"Só para identificação. O acesso é liberado na hora.":["Just for identification. Access is granted right away.","Solo para identificación. El acceso se libera al instante."],"Entrar na área ASCOM":["Enter the ASCOM area","Entrar al área ASCOM"],
-"Solicitar acesso":["Request access","Solicitar acceso"],"Qual é a sua numérica?":["What's your student number?","¿Cuál es tu número de alumno?"],"Usada só para identificação. O acesso é liberado na hora.":["Used only for identification. Access is granted right away.","Solo para identificación. El acceso se libera al instante."],"Usar outra conta":["Use another account","Usar otra cuenta"],"Pedido enviado!":["Request sent!","¡Solicitud enviada!"],
+"Solicitar acesso":["Request access","Solicitar acceso"],"Sua turma e numérica":["Your class and student number","Tu turma y número de alumno"],"Usadas só para identificação. O acesso é liberado na hora.":["Used only for identification. Access is granted right away.","Solo para identificación. El acceso se libera al instante."],"Usar outra conta":["Use another account","Usar otra cuenta"],"Pedido enviado!":["Request sent!","¡Solicitud enviada!"],
 "Aguardando aprovação do instrutor. Assim que for liberado, o acesso abre sozinho.":["Waiting for the instructor's approval. Once approved, access opens automatically.","Esperando la aprobación del instructor. Cuando sea aprobada, el acceso se abre solo."],
 "Numérica":["Student number","Número de alumno"],"Acesso não autorizado":["Access not authorized","Acceso no autorizado"],"Seu acesso foi bloqueado pelo instrutor. Se achar que é um engano, fale com ele.":["Your access was blocked by the instructor. If you think this is a mistake, talk to him.","Tu acceso fue bloqueado por el instructor. Si crees que es un error, habla con él."],
 "Corrigir numérica":["Fix student number","Corregir número"],"Não foi possível conectar":["Couldn't connect","No se pudo conectar"],"Verifique sua internet e tente de novo.":["Check your internet and try again.","Revisa tu internet e inténtalo de nuevo."],"Tentar de novo":["Try again","Intentar de nuevo"]
@@ -4345,7 +4362,7 @@ const watch = u => {
     const r = s.data();
     if (!r) { fillUser(u); step("num"); setTimeout(() => $("#gNum").focus(), 300); return; }
     if (r.status === "approved") { close(); onOk && onOk(); return; }
-    $("#gNumShow").textContent = r.numerica || "";
+    $("#gNumShow").textContent = (r.curso ? r.curso + " · " : "") + "Nº " + (r.numerica || "");
     if (r.status === "denied") { fillUser(u); step("denied"); return; }
     step("pending");
   }, e => { $("#gErr").textContent = "Sem permissão para ler o pedido. Tente de novo em instantes."; step("error"); console.warn(e); });
@@ -4377,14 +4394,16 @@ $("#gGoogle").onclick = async () => {
   }
 };
 $("#gSend").onclick = async () => {
-  const raw = $("#gNum").value.replace(/\D/g, ""), n = raw ? raw.padStart(2, "0") : "";
+  const raw = $("#gNum").value.replace(/\D/g, ""), n = raw ? raw.padStart(2, "0") : "", curso = (gate.querySelector('.gturma [aria-checked="true"]') || {}).dataset?.c || "";
+  if (!curso) { const T = gate.querySelector(".gturma"); T.classList.remove("err"); void T.offsetWidth; T.classList.add("err"); return; }
   if (n.length < 1) { const L = $("#gNum").parentElement; L.classList.remove("err"); void L.offsetWidth; L.classList.add("err"); $("#gNum").focus(); return; }
   $("#gSend").disabled = true;
-  try { await setDoc(doc(db, "requests", user.uid), { uid: user.uid, name: user.displayName || "", email: user.email || "", photo: user.photoURL || "", numerica: n, status: "approved", auto: true, createdAt: serverTimestamp() }); }
+  try { await setDoc(doc(db, "requests", user.uid), { uid: user.uid, name: user.displayName || "", email: user.email || "", photo: user.photoURL || "", numerica: n, curso, status: "approved", auto: true, createdAt: serverTimestamp() }); }
   catch (e) { $("#gErr").textContent = "Não foi possível enviar o pedido. Tente de novo."; step("error"); console.warn(e); }
   $("#gSend").disabled = false;
 };
 $("#gNum").addEventListener("keydown", e => { if (e.key === "Enter") $("#gSend").click(); });
+gate.querySelectorAll(".gturma button").forEach(b => b.addEventListener("click", () => { gate.querySelectorAll(".gturma button").forEach(x => x.setAttribute("aria-checked", x === b)); gate.querySelector(".gturma").classList.remove("err"); $("#gNum").focus(); }));
 $("#gNum").addEventListener("input", e => { e.target.value = e.target.value.replace(/\D/g, "").slice(0, 3); });
 $("#gTry").onclick = () => user ? watch(user) : step("login");
 gate.querySelectorAll("[data-out]").forEach(b => b.onclick = async () => { if (unsub) { unsub(); unsub = null; } await signOut(auth); step("login"); });

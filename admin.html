@@ -95,7 +95,7 @@ header{position:sticky;top:0;z-index:10;background:rgba(10,10,10,.85);backdrop-f
       <button data-t="pending">Pendentes <i id="cPend">0</i></button>
       <button data-t="logins">Histórico de logins <i id="cLog">0</i></button>
     </div>
-    <input class="search" id="q" placeholder="Buscar nome, e-mail ou numérica…">
+    <input class="search" id="q" placeholder="Buscar nome, e-mail, turma ou numérica…">
   </div>
   <div class="list" id="list"></div>
 </main>
@@ -135,7 +135,7 @@ const draw = () => {
   $("#sAppr").textContent = $("#cAppr").textContent = by("approved").length;
   $("#cDen").textContent = by("denied").length; $("#cLog").textContent = LOG.length;
   $("#sUsers").textContent = USERS; $("#sToday").textContent = LOG.filter(l => l.at && l.at.toDate && l.at.toDate() >= today).length;
-  const q = $("#q").value.trim().toLowerCase(), hit = o => !q || [o.name, o.email, o.numerica].some(v => String(v || "").toLowerCase().includes(q));
+  const q = $("#q").value.trim().toLowerCase(), hit = o => !q || [o.name, o.email, o.numerica, o.curso, (o.curso || "") + " " + (o.numerica || "")].some(v => String(v || "").toLowerCase().includes(q));
   let html = "";
   if (tab === "logins") {
     const rows = LOG.filter(hit);
@@ -145,7 +145,7 @@ const draw = () => {
     const rows = by(tab).filter(hit);
     const lab = { pending: ["p", "Pendente"], approved: ["a", "Com acesso"], denied: ["d", "Bloqueado"] };
     html = rows.map(r => `<div class="row"><img src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer"><div><div class="nm">${esc(r.name || "Sem nome")}</div><div class="em">${esc(r.email)}</div>
-      <div class="meta"><span class="tag num">Numérica ${esc(r.numerica)}</span><span class="tag ${lab[r.status][0]}">${lab[r.status][1]}</span><span>Entrou: ${fmt(r.createdAt)}</span>${r.decidedAt ? `<span>Decisão: ${fmt(r.decidedAt)}</span>` : ""}</div></div>
+      <div class="meta"><span class="tag num">${r.curso ? esc(r.curso) + " · " : ""}Nº ${esc(r.numerica)}</span><span class="tag ${lab[r.status][0]}">${lab[r.status][1]}</span><span>Entrou: ${fmt(r.createdAt)}</span>${r.decidedAt ? `<span>Decisão: ${fmt(r.decidedAt)}</span>` : ""}</div></div>
       <div class="acts">${r.status !== "approved" ? `<button class="btn sm ok" data-a="approved" data-id="${r.id}">✓ ${r.status === "denied" ? "Desbloquear" : "Liberar"}</button>` : ""}${r.status !== "denied" ? `<button class="btn sm no" data-a="denied" data-id="${r.id}">⛔ Bloquear acesso</button>` : ""}<button class="btn sm" data-del="${r.id}" title="Apaga o registro; a pessoa entra de novo no próximo login">Apagar registro</button></div></div>`).join("")
       || `<div class="empty">${{ pending: "Nenhum pedido pendente.", approved: "Ninguém entrou ainda.", denied: "Ninguém bloqueado." }[tab]}</div>`;
   }
