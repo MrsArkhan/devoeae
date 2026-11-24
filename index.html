@@ -3391,18 +3391,20 @@ const store = {
   get(){ try { return sessionStorage.getItem(KEY) === "1"; } catch(e) { return !!window.__ascom; } },
   set(){ try { sessionStorage.setItem(KEY, "1"); } catch(e) {} window.__ascom = true; }
 };
+/* abre a área ASCOM (usado também quando o login volta do Google no celular) */
+window.ascomGo = () => {
+  const m = $("#msg"), st = $$("#steps div");
+  store.set(); st.forEach(d => d.classList.add("on"));
+  m.className = "msg ok"; m.textContent = "ACESSO LIBERADO — ABRINDO...";
+  setTimeout(() => { $("#wcrest").src = ASCOM_SRC(); $("#welcome").classList.add("on"); $("#wgo").focus(); }, 700);
+};
 $("#cform").addEventListener("submit", ev => {
   ev.preventDefault();
   const v = $("#code").value.trim().toUpperCase(), m = $("#msg"), f = $("#cform");
   const st = $$("#steps div");
   if (!v) { m.className = "msg no"; m.textContent = "DIGITE O CÓDIGO PARA CONTINUAR"; return; }
   if (v === CONFIG.ascomCode.toUpperCase()) {
-    const go = () => {
-      store.set();
-      st.forEach(d => d.classList.add("on"));
-      m.className = "msg ok"; m.textContent = "ACESSO LIBERADO — ABRINDO...";
-      setTimeout(() => { $("#wcrest").src = ASCOM_SRC(); $("#welcome").classList.add("on"); $("#wgo").focus(); }, 700);
-    };
+    const go = window.ascomGo;
     st.forEach((d, i) => d.classList.toggle("on", i === 0));
     m.className = "msg ok"; m.textContent = "CÓDIGO CORRETO — FAÇA LOGIN";
     /* o login com Google e a aprovação da numérica liberam a entrada */
@@ -4312,7 +4314,7 @@ route();
 <script type="module">
 /* ---------- login ASCOM com Google + numérica (Firebase) ---------- */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 const app = initializeApp({ apiKey: "AIzaSyD_wM8hkldpmiSVvnz-beT7r-1PUQ7hevA", authDomain: "devoe.com.br", projectId: "devoe-469a6", storageBucket: "devoe-469a6.firebasestorage.app", messagingSenderId: "390681910799", appId: "1:390681910799:web:e08cfe8e3d592574368d7a" });
 const auth = getAuth(app), db = getFirestore(app);
@@ -4334,9 +4336,11 @@ const logLogin = async u => {
 };
 const fillUser = u => { $("#gAv").src = u.photoURL || ""; $("#gName").textContent = u.displayName || "Aluno(a)"; $("#gMail").textContent = u.email || ""; };
 /* acompanha o pedido em tempo real */
+let wT = 0;
 const watch = u => {
   if (unsub) unsub();
-  step("loading");
+  step("loading"); clearTimeout(wT);
+  wT = setTimeout(() => { if (gate.querySelector('.gstep.on')?.dataset.s === "loading") { $("#gErr").textContent = "A conexão demorou demais. Tente de novo."; step("error"); } }, 20000);
   unsub = onSnapshot(doc(db, "requests", u.uid), s => {
     const r = s.data();
     if (!r) { fillUser(u); step("num"); setTimeout(() => $("#gNum").focus(), 300); return; }
@@ -4346,11 +4350,25 @@ const watch = u => {
     step("pending");
   }, e => { $("#gErr").textContent = "Sem permissão para ler o pedido. Tente de novo em instantes."; step("error"); console.warn(e); });
 };
-onAuthStateChanged(auth, u => { user = u; ready = true; if (u) logLogin(u); if (!gate.hidden) u ? watch(u) : step("login"); });
+const TOUCH = matchMedia("(hover: none), (pointer: coarse)").matches, FLAG = "devoe-gate";
+const flag = () => { try { return sessionStorage.getItem(FLAG) === "1"; } catch (_) { return false; } };
+const clearFlag = () => { try { sessionStorage.removeItem(FLAG); } catch (_) {} };
+let redirectDone = !flag();
+/* voltou do Google (celular): retoma o fluxo sozinho */
+if (flag()) {
+  const resume = () => { onOk = window.ascomGo; const a = document.getElementById("acesso"); a && a.scrollIntoView({ block: "center" }); $("#gCrest").src = (window.ASCOM_SRC && window.ASCOM_SRC()) || ""; open(); step("loading"); };
+  document.readyState === "loading" ? addEventListener("DOMContentLoaded", resume) : resume();
+  getRedirectResult(auth).then(() => { redirectDone = true; if (!auth.currentUser) { clearFlag(); step("login"); } })
+    .catch(e => { redirectDone = true; clearFlag(); $("#gErr").textContent = "Não foi possível entrar com o Google. Tente de novo."; step("error"); console.warn(e); });
+}
+onAuthStateChanged(auth, u => { user = u; ready = true; if (u) logLogin(u);
+  if (u && flag()) { clearFlag(); if (!onOk) onOk = window.ascomGo; if (gate.hidden) open(); watch(u); return; }
+  if (!gate.hidden && redirectDone) u ? watch(u) : step("login"); });
 /* chamado pelo site quando o código ASCOM está correto */
 window.devoeGate = cb => { onOk = cb; $("#gCrest").src = (window.ASCOM_SRC && window.ASCOM_SRC()) || ""; open(); if (!ready) { step("loading"); return; } user ? watch(user) : step("login"); };
 $("#gGoogle").onclick = async () => {
   const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
+  if (TOUCH) { try { sessionStorage.setItem(FLAG, "1"); } catch (_) {} step("loading"); return signInWithRedirect(auth, p); }   // celular: redireciona
   try { step("loading"); await signInWithPopup(auth, p); }
   catch (e) {
     if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") return signInWithRedirect(auth, p);
