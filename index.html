@@ -2452,6 +2452,23 @@ body.reel-mini #youtube{z-index:60!important}
 .vtoast:hover .vt-bar{animation-play-state:paused}
 @keyframes vtbar{from{transform:scaleX(1)}to{transform:scaleX(0)}}
 @media (max-width:760px){.vtoast{top:72px;left:12px;right:12px;width:auto;transform:translateY(-130%)}.vtoast.on{transform:none}}
+
+/* ===== seletor de idioma ===== */
+.lang{position:relative}
+.lbtn{height:40px;padding:0 12px 0 10px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;background:transparent;border:1px solid var(--ln2);color:#fff;cursor:pointer;transition:border-color .3s}
+.lbtn:hover,.lang.open .lbtn{border-color:var(--gd)}
+.lbtn svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6}
+.lbtn b{font:700 11px var(--tx);letter-spacing:.08em}
+.lmenu{position:absolute;top:calc(100% + 10px);right:0;min-width:168px;padding:6px;border-radius:14px;background:rgba(16,16,16,.96);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 44px rgba(0,0,0,.6);opacity:0;transform:translateY(-6px);pointer-events:none;transition:opacity .25s,transform .3s var(--ease);z-index:130}
+.lang.open .lmenu{opacity:1;transform:none;pointer-events:auto}
+.lmenu button{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;border:0;background:transparent;color:#d6d6d6;font:600 13px var(--tx);cursor:pointer;text-align:left}
+.lmenu button:hover{background:rgba(255,255,255,.06);color:#fff}
+.lmenu button span{width:26px;height:20px;border-radius:5px;display:grid;place-items:center;background:rgba(255,255,255,.07);font:700 10px var(--tx);letter-spacing:.06em;color:#bdbdbd}
+.lmenu button[aria-checked="true"]{color:#fff}
+.lmenu button[aria-checked="true"] span{background:var(--gd);color:#0a0a0a}
+.lmenu button[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--gd);font-size:12px}
+@media (max-width:760px){.lbtn{height:36px;padding:0 10px 0 8px;gap:5px}.lbtn svg{width:14px;height:14px}.lbtn b{font-size:10px}.lmenu{position:fixed;top:64px;right:12px}}
+@media (max-width:380px){.lbtn svg{display:none}.lbtn{padding:0 9px}}
 </style>
 </head>
 <body>
@@ -2532,6 +2549,14 @@ body.reel-mini #youtube{z-index:60!important}
     <div class="icons">
       <a class="hide-m" href="https://www.youtube.com/@devoeae" target="_blank" rel="noopener" aria-label="YouTube" data-c="ABRIR"><svg><use href="#i-yt"/></svg></a>
       <a class="hide-m" href="https://www.tiktok.com/@devoe.ae" target="_blank" rel="noopener" aria-label="TikTok" data-c="ABRIR"><svg><use href="#i-tt"/></svg></a>
+      <div class="lang" id="lang">
+        <button class="lbtn" id="langBtn" aria-label="Idioma" aria-haspopup="true" aria-expanded="false"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 3.8 5.7 3.8 9s-1.3 6.3-3.8 9c-2.5-2.7-3.8-5.7-3.8-9S9.5 5.7 12 3z"/></svg><b>PT</b></button>
+        <div class="lmenu" id="langMenu" role="menu">
+          <button role="menuitemradio" data-l="pt" aria-checked="true"><span>PT</span>Português</button>
+          <button role="menuitemradio" data-l="en" aria-checked="false"><span>EN</span>English</button>
+          <button role="menuitemradio" data-l="es" aria-checked="false"><span>ES</span>Español</button>
+        </div>
+      </div>
       <button class="sbtn" id="sbtn" aria-label="Ligar música de fundo" aria-pressed="false" title="Música"><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i></span></button>
       <div class="notif">
         <button class="nbtn" id="nbtn" aria-label="Mensagens" aria-expanded="false" aria-controls="npanel"><svg><use href="#i-mail"/></svg><span class="badge" id="nbadge">1</span></button>
@@ -3703,7 +3728,8 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
 (function(){
   const slot = $("#reelSlot"), fr = $("#reelFrame"), ifr = $("#reelIframe"); if (!slot) return;
   const IDS = CONFIG.ytVideos || [];
-  let cur = IDS[0], loaded = false, closed = false, muted = true, userPaused = false, ytState = -1, ytMuted = true, ccOff = false;
+  const active = () => !!(navigator.userActivation && navigator.userActivation.hasBeenActive);
+  let cur = IDS[0], loaded = false, closed = false, muted = !active(), userMuted = false, userPaused = false, ytState = -1, ytMuted = !active(), ccOff = false;
   const online = /^https?:$/.test(location.protocol);
   const url = id => `https://www.youtube.com/embed/${id}?autoplay=1&mute=${muted ? 1 : 0}&loop=1&playlist=${id}&controls=0&modestbranding=1&rel=0&playsinline=1&iv_load_policy=3&cc_load_policy=0&disablekb=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
   const cmd = (func, args = []) => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: "command", func, args }), "*"); } catch (e) {} };
@@ -3757,7 +3783,14 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
   $("#reelPP").addEventListener("click", e => { stop(e); toggle(); });
   $("#reelNext").addEventListener("click", e => { stop(e); const k = IDS.indexOf(cur); swapTo(IDS[(k + 1) % IDS.length]); });
   $("#reelSize").addEventListener("click", e => { stop(e); fr.classList.toggle("big"); $("#reelSize").setAttribute("aria-label", fr.classList.contains("big") ? "Diminuir janelinha" : "Aumentar janelinha"); });
-  $("#reelSnd").addEventListener("click", e => { stop(e); muted = !muted; cmd(muted ? "mute" : "unMute"); if (!muted) { cmd("setVolume", [70]); if (userPaused) play(); }
+  const sndUi = () => { $("#reelSnd").classList.toggle("on", !muted); $("#reelSnd").setAttribute("aria-label", muted ? "Ativar som" : "Desativar som"); };
+  const unmute = () => { muted = false; ytMuted = false; cmd("unMute"); cmd("setVolume", [65]); sndUi(); duckYt(); };
+  /* o vídeo já vem com som: se o navegador obrigou a começar mudo, liga o som no primeiro toque na página */
+  const firstGesture = () => { ["pointerdown","keydown","touchstart"].forEach(t => removeEventListener(t, firstGesture, true)); if (muted && !userMuted) { unmute(); setTimeout(unmute, 900); } };
+  if (muted) ["pointerdown","keydown","touchstart"].forEach(t => addEventListener(t, firstGesture, { capture: true, passive: true }));
+  ifr.addEventListener("load", () => { if (!muted) setTimeout(unmute, 700); });
+  sndUi();
+  $("#reelSnd").addEventListener("click", e => { stop(e); userMuted = !muted; muted = !muted; cmd(muted ? "mute" : "unMute"); if (!muted) { cmd("setVolume", [70]); if (userPaused) play(); }
     ytMuted = muted; $("#reelSnd").classList.toggle("on", !muted); $("#reelSnd").setAttribute("aria-label", muted ? "Ativar som" : "Desativar som"); duckYt(); });
   const unmini = () => { fr.classList.remove("mini", "big"); document.body.classList.remove("reel-mini"); };
   $("#reelX").addEventListener("click", e => { stop(e); closed = true; unmini(); cmd("pauseVideo"); duckYt(); });
@@ -3918,9 +3951,11 @@ route();
   window.devoeDuck = (src, on) => {
     const before = ducks.size; on ? ducks.add(src) : ducks.delete(src);
     if (ducks.size === before && (before === 0) === !on) return;           // nada mudou
-    if (audio && !audio.paused && btn.classList.contains("on")) fade(target(), on ? 600 : 1200);
+    if (audio && !audio.paused && btn.classList.contains("on")) fade(target(), on ? 1400 : 1800);   // desce e sobe suave
   };
   ui(false);
+  /* tenta tocar assim que o site abre (alguns navegadores permitem); senão, começa no primeiro toque */
+  if (wanted) { const a = mk(); const pr = a.play(); if (pr && pr.then) pr.then(() => { ui(true); fade(target(), 2200); ["pointerdown","keydown","touchstart"].forEach(t => removeEventListener(t, first, true)); }).catch(() => {}); }
 })();
 
 /* ---------- TikTok com som (card aberto ou tela cheia): abaixa a música do site ---------- */
@@ -3939,6 +3974,150 @@ route();
   });
   const check = () => { const on = players().some(f => { const s = st.get(f) || { playing: true, muted: false }; return s.playing && !s.muted; }); window.devoeDuck && window.devoeDuck("tt", on); };
   setInterval(check, 600);
+})();
+/* ---------- idiomas: português (principal), english, español ---------- */
+(function(){
+  const LANGS = { pt: "Português", en: "English", es: "Español" };
+  const D = {
+"ABERTURA":["OPENING","APERTURA"],"EDIÇÕES":["EDITS","EDICIONES"],"ACESSO":["ACCESS","ACCESO"],"SOBRE":["ABOUT","SOBRE MÍ"],"CONTATO":["CONTACT","CONTACTO"],
+"Início":["Home","Inicio"],"Edições":["Edits","Ediciones"],"Contato":["Contact","Contacto"],
+"Novo vídeo · TikTok":["New video · TikTok","Nuevo video · TikTok"],"Assistir agora →":["Watch now →","Ver ahora →"],
+"Trabalhos":["Work","Trabajos"],"Acesso":["Access","Acceso"],"Sobre":["About","Sobre mí"],
+"Notificações":["Notifications","Notificaciones"],"Vídeos":["Videos","Videos"],"Mensagens":["Messages","Mensajes"],"agora":["now","ahora"],
+"Bem-vindo! 👋 Explore minhas edições, artes e projetos.":["Welcome! 👋 Explore my edits, artwork and projects.","¡Bienvenido! 👋 Explora mis ediciones, artes y proyectos."],
+"Ver perfil no TikTok":["View TikTok profile","Ver perfil en TikTok"],"Ver perfil no TikTok ↗":["View TikTok profile ↗","Ver perfil en TikTok ↗"],
+"Edição de vídeo":["Video editing","Edición de video"],"Design gráfico":["Graphic design","Diseño gráfico"],
+"por":["by","por"],
+"Editor de vídeo e designer gráfico criando visuais de alto impacto para a cultura digital. Cortes precisos, ritmo forte, identidade própria.":["Video editor and graphic designer creating high-impact visuals for digital culture. Precise cuts, strong rhythm, a unique identity.","Editor de video y diseñador gráfico creando visuales de alto impacto para la cultura digital. Cortes precisos, ritmo fuerte, identidad propia."],
+"ROLE":["SCROLL","DESLIZA"],"Vídeos longos":["Long videos","Videos largos"],"Ver todos no YouTube":["See all on YouTube","Ver todos en YouTube"],
+"Edições em destaque":["Featured edits","Ediciones destacadas"],"Ver todas no TikTok":["See all on TikTok","Ver todas en TikTok"],"PRÉVIA":["PREVIEW","VISTA PREVIA"],
+"O Design":["The Design","El Design"],
+"Design real. Estilo real. Cartazes, artes e composições visuais com identidade própria.":["Real design. Real style. Posters, artwork and visual compositions with their own identity.","Diseño real. Estilo real. Carteles, artes y composiciones visuales con identidad propia."],
+"Explorar design":["Explore design","Explorar diseño"],"01 / Acesso privado · ASCOM CMTO":["01 / Private access · ASCOM CMTO","01 / Acceso privado · ASCOM CMTO"],
+"Acesso ASCOM":["ASCOM Access","Acceso ASCOM"],"Um acesso exclusivo. Só entra quem tem o código.":["Exclusive access. Only those with the code get in.","Un acceso exclusivo. Solo entra quien tiene el código."],
+"Código":["Code","Código"],"Validação":["Validation","Validación"],"Exclusivo":["Exclusive","Exclusivo"],"Desbloquear":["Unlock","Desbloquear"],
+"Visualizações":["Views","Visualizaciones"],"Seguidores no TikTok":["TikTok followers","Seguidores en TikTok"],"Inscritos no YouTube":["YouTube subscribers","Suscriptores en YouTube"],"Anos editando":["Years editing","Años editando"],
+"03 / Sobre":["03 / About","03 / Sobre mí"],"Por trás":["Behind","Detrás"],"da":["the","de la"],"edição":["edit","edición"],
+"A DEVOE é a identidade criativa de Aígo Silva — editor de vídeo e designer gráfico focado em transformar ideias, vídeos e visuais em experiências digitais de alto impacto.":["DEVOE is the creative identity of Aígo Silva — a video editor and graphic designer focused on turning ideas, videos and visuals into high-impact digital experiences.","DEVOE es la identidad creativa de Aígo Silva — editor de video y diseñador gráfico enfocado en transformar ideas, videos y visuales en experiencias digitales de alto impacto."],
+"DESIGNER":["DESIGNER","DISEÑADOR"],"CRIADOR":["CREATOR","CREADOR"],"Quem caminha junto":["Who walks with me","Quienes caminan conmigo"],"Parceiros":["Partners","Aliados"],
+"Criador dos edits mais intensos da série La Casa de Papel.":["Creator of the most intense La Casa de Papel edits.","Creador de los edits más intensos de la serie La Casa de Papel."],
+"seguidores":["followers","seguidores"],"curtidas":["likes","me gusta"],
+"Criador do script que uso nas minhas edições.":["Creator of the script I use in my edits.","Creador del script que uso en mis ediciones."],"Visitar site ↗":["Visit website ↗","Visitar sitio ↗"],
+"Responsável pelos edits mais épicos e marcantes de Vikings.":["Behind the most epic and memorable Vikings edits.","Responsable de los edits más épicos y memorables de Vikings."],
+"Entre para a crew DEVOE":["Join the DEVOE crew","Únete a la crew DEVOE"],
+"Deixe seu e-mail e conte rapidinho sobre o seu projeto. Eu respondo pessoalmente.":["Leave your email and tell me briefly about your project. I reply personally.","Deja tu correo y cuéntame brevemente sobre tu proyecto. Respondo personalmente."],
+"Explorar":["Explore","Explorar"],"E-mail":["Email","Correo"],
+"ACESSO ASCOM":["ASCOM ACCESS","ACCESO ASCOM"],"Voltar ao site":["Back to site","Volver al sitio"],"Voltar":["Back","Volver"],"Acesso liberado":["Access granted","Acceso concedido"],
+"Central de downloads":["Download center","Centro de descargas"],"Baixe":["Download","Descarga"],"e crie":["and create","y crea"],
+"Modelos do Canva, brasões e packs de PNG prontos para usar. Escolha, veja a prévia e baixe.":["Canva templates, crests and PNG packs ready to use. Choose, preview and download.","Plantillas de Canva, escudos y packs de PNG listos para usar. Elige, mira la vista previa y descarga."],
+"Modelos do Canva":["Canva templates","Plantillas de Canva"],"Brasões":["Crests","Escudos"],"PNG Eventos":["Event PNGs","PNG de eventos"],"Todos":["All","Todos"],
+"Cada arte tem duas versões editáveis: feed e stories. Clique para abrir no Canva.":["Each artwork has two editable versions: feed and stories. Click to open in Canva.","Cada arte tiene dos versiones editables: feed y stories. Haz clic para abrir en Canva."],
+"Abrir arte no formato":["Open artwork in format","Abrir arte en formato"],"Nada encontrado nesta categoria.":["Nothing found in this category.","No se encontró nada en esta categoría."],
+"Brasões do CMTO em alta, com fundo transparente.":["CMTO crests in high resolution, with transparent background.","Escudos del CMTO en alta resolución, con fondo transparente."],
+"Baixar PNG":["Download PNG","Descargar PNG"],
+"Packs de PNG para artes de eventos. Baixe o pack completo em ZIP ou cada PNG separado.":["PNG packs for event artwork. Download the full pack as ZIP or each PNG separately.","Packs de PNG para artes de eventos. Descarga el pack completo en ZIP o cada PNG por separado."],
+"Baixar pack completo (ZIP)":["Download full pack (ZIP)","Descargar pack completo (ZIP)"],"Nenhum pack encontrado.":["No pack found.","No se encontró ningún pack."],
+"Do esboço à arte final":["From sketch to final art","Del boceto al arte final"],"Material":["Support","Material"],"de apoio":["material","de apoyo"],
+"Explorem as possibilidades, vejam como funcionam as artes por trás, testem combinações, usem a criatividade e coloquem em prática os ensinamentos das nossas aulas.":["Explore the possibilities, see how the artwork works behind the scenes, test combinations, be creative and put what we learned in class into practice.","Exploren las posibilidades, vean cómo funcionan las artes por dentro, prueben combinaciones, usen la creatividad y pongan en práctica lo aprendido en nuestras clases."],
+"Bons projetos!":["Happy creating!","¡Buenos proyectos!"],"Esboço":["Sketch","Boceto"],"V1 · Esboço":["V1 · Sketch","V1 · Boceto"],
+"Arraste a linha para comparar":["Drag the line to compare","Arrastra la línea para comparar"],"ACESSO EXCLUSIVO ASCOM":["ASCOM EXCLUSIVE ACCESS","ACCESO EXCLUSIVO ASCOM"],
+"Acesso liberado · ASCOM":["Access granted · ASCOM","Acceso concedido · ASCOM"],"Material de apoio — Canva":["Support material — Canva","Material de apoyo — Canva"],
+"Preparei este material para ajudar vocês nos projetos e atividades de design.":["I put this material together to help you with your design projects and activities.","Preparé este material para ayudarles en los proyectos y actividades de diseño."],
+"O que vão encontrar":["What you'll find","Lo que encontrarán"],"Elementos gráficos para Canva.":["Graphic elements for Canva.","Elementos gráficos para Canva."],
+"Flyers para eventos e divulgações.":["Flyers for events and promotions.","Flyers para eventos y promociones."],"Modelos com temática de Arraiá.":["Arraiá (June festival) themed templates.","Plantillas con temática de Arraiá."],
+"Logotipos e materiais da escola.":["School logos and materials.","Logotipos y materiales de la escuela."],"Projetos para usar como referência.":["Projects to use as reference.","Proyectos para usar como referencia."],
+"Entrar no material de apoio":["Open the support material","Entrar al material de apoyo"],"Abrir no TikTok ↗":["Open on TikTok ↗","Abrir en TikTok ↗"],
+"ACESSO LIBERADO — ABRINDO...":["ACCESS GRANTED — OPENING...","ACCESO CONCEDIDO — ABRIENDO..."],"ACESSO NEGADO — CÓDIGO INVÁLIDO":["ACCESS DENIED — INVALID CODE","ACCESO DENEGADO — CÓDIGO INVÁLIDO"],
+"DIGITE O CÓDIGO PARA ACESSAR":["ENTER THE CODE TO ACCESS","INGRESA EL CÓDIGO PARA ACCEDER"],"DIGITE O CÓDIGO PARA CONTINUAR":["ENTER THE CODE TO CONTINUE","INGRESA EL CÓDIGO PARA CONTINUAR"],
+"DOWNLOADS":["DOWNLOADS","DESCARGAS"],"PNG em alta, pronto para usar nas suas artes de evento.":["High-res PNG, ready to use in your event artwork.","PNG en alta, listo para usar en tus artes de eventos."],
+"Download do pack iniciado":["Pack download started","Descarga del pack iniciada"],"Download iniciado ✓":["Download started ✓","Descarga iniciada ✓"],
+"Gerando arquivo...":["Generating file...","Generando archivo..."],"Não foi possível gerar o PNG":["Couldn't generate the PNG","No se pudo generar el PNG"],
+/* atributos */
+"Navegação rápida":["Quick navigation","Navegación rápida"],"Fechar notificação":["Close notification","Cerrar notificación"],"Ligar música de fundo":["Turn on background music","Activar música de fondo"],
+"Desligar música de fundo":["Turn off background music","Desactivar música de fondo"],"Música":["Music","Música"],"Abrir menu":["Open menu","Abrir menú"],"Escolher edição":["Choose edit","Elegir edición"],
+"Vídeo do YouTube":["YouTube video","Video de YouTube"],"Pausar ou continuar o vídeo":["Pause or resume the video","Pausar o continuar el video"],"Pausar":["Pause","Pausar"],"Continuar":["Resume","Continuar"],
+"Próximo vídeo":["Next video","Siguiente video"],"Aumentar janelinha":["Enlarge mini player","Agrandar mini reproductor"],"Diminuir janelinha":["Shrink mini player","Reducir mini reproductor"],
+"Ativar som":["Turn sound on","Activar sonido"],"Desativar som":["Turn sound off","Desactivar sonido"],"Fechar janelinha":["Close mini player","Cerrar mini reproductor"],
+"Anterior":["Previous","Anterior"],"Próximo":["Next","Siguiente"],"Próxima":["Next","Siguiente"],"Abrir no TikTok":["Open on TikTok","Abrir en TikTok"],
+"Digite seu código de acesso...":["Enter your access code...","Ingresa tu código de acceso..."],"Código de acesso":["Access code","Código de acceso"],"Seu e-mail":["Your email","Tu correo"],
+"Enviar":["Send","Enviar"],"Categorias de download":["Download categories","Categorías de descarga"],"Buscar download...":["Search downloads...","Buscar descarga..."],"Buscar download":["Search downloads","Buscar descarga"],
+"Comparar esboço e flyer pronta":["Compare sketch and finished flyer","Comparar boceto y flyer terminado"],"Prévia do download":["Download preview","Vista previa de la descarga"],"Fechar":["Close","Cerrar"],"Arte":["Artwork","Arte"],"Vídeo":["Video","Video"],
+"Idioma":["Language","Idioma"]
+  };
+  const PACK = {"ARBUSTO":["BUSH","ARBUSTO"],"BAMBU":["BAMBOO","BAMBÚ"],"BARRIL":["BARREL","BARRIL"],"CAIXA DE SOM":["SPEAKER","ALTAVOZ"],"CANHÃO DE LUZ":["SPOTLIGHT","CAÑÓN DE LUZ"],"CORDA":["ROPE","CUERDA"],"CORRENTE":["CHAIN","CADENA"],"ESTRUTURA DE FERRO":["IRON TRUSS","ESTRUCTURA DE HIERRO"],"PLACA DE MADEIRA":["WOODEN SIGN","LETRERO DE MADERA"],"PORTAL":["PORTAL","PORTAL"],"PLACA DE FERRO":["IRON SIGN","LETRERO DE HIERRO"],"LÂMPADA":["LIGHT BULB","BOMBILLA"],"VEÍCULOS":["VEHICLES","VEHÍCULOS"],"NEON":["NEON","NEÓN"],"PLACA DE NEON":["NEON SIGN","LETRERO DE NEÓN"],"FOGO":["FIRE","FUEGO"],"BACKGROUND":["BACKGROUND","FONDO"]};
+  const cap = s => s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase());
+  const packT = (n, k) => { const u = n.toUpperCase(); return PACK[u] ? PACK[u][k] : n; };
+  const PAT = [
+    [/^Edição (\d+)$/, (m, k) => ["Edit ", "Edición "][k] + m[1]],
+    [/^Vídeo (\d+)$/, (m, k) => ["Video " + m[1], "Video " + m[1]][k]],
+    [/^(\d+) artes$/, (m, k) => [m[1] + " artworks", m[1] + " artes"][k]],
+    [/^(\d+) arquivos (PNG|JPG) · (.+)$/, (m, k) => [`${m[1]} ${m[2]} files · ${m[3]}`, `${m[1]} archivos ${m[2]} · ${m[3]}`][k]],
+    [/^PNG EVENTOS - (.+?)( \d+)?$/, (m, k) => [`EVENT PNGS - ${packT(m[1], 0)}`, `PNG EVENTOS - ${packT(m[1], 1)}`][k] + (m[2] || "")],
+    [/^Ver PNG EVENTOS - (.+?) (\d+)$/, (m, k) => [`View EVENT PNGS - ${packT(m[1], 0)} ${m[2]}`, `Ver PNG EVENTOS - ${packT(m[1], 1)} ${m[2]}`][k]],
+    [/^Pack ZIP · parte (\d+)$/, (m, k) => [`ZIP pack · part ${m[1]}`, `Pack ZIP · parte ${m[1]}`][k]],
+    [/^Ver todos os (\d+) PNGs ↓$/, (m, k) => [`See all ${m[1]} PNGs ↓`, `Ver los ${m[1]} PNG ↓`][k]],
+    [/^Brasão (.+)$/, (m, k) => [`${m[1]} crest`, `Escudo ${m[1]}`][k]],
+    [/^Ver prévia de (.+)$/, (m, k) => [`Preview ${tr(m[1], k)}`, `Vista previa de ${tr(m[1], k)}`][k]],
+    [/^Reproduzir (.+)$/, (m, k) => [`Play ${m[1]}`, `Reproducir ${m[1]}`][k]],
+    [/^Assistir vídeo (\d+)$/, (m, k) => [`Watch video ${m[1]}`, `Ver video ${m[1]}`][k]],
+    [/^Assistir edição (\d+)$/, (m, k) => [`Watch edit ${m[1]}`, `Ver edición ${m[1]}`][k]],
+    [/^Ampliar (.+)$/, (m, k) => [`Enlarge ${m[1]}`, `Ampliar ${m[1]}`][k]],
+    [/^(.+) visualizações$/, (m, k) => [`${m[1]} views`, `${m[1]} visualizaciones`][k]],
+    [/^Download iniciado: (.+)$/, (m, k) => [`Download started: ${m[1]}`, `Descarga iniciada: ${m[1]}`][k]]
+  ];
+  const tr = (t, k) => {
+    if (D[t]) return D[t][k];
+    if (PACK[t.toUpperCase()] && t !== t.toUpperCase()) { const v = PACK[t.toUpperCase()][k].toLowerCase(); return v.charAt(0).toUpperCase() + v.slice(1); }
+    for (const [re, f] of PAT) { const m = t.match(re); if (m) return f(m, k); }
+    return null;
+  };
+  let lang = "pt"; try { lang = localStorage.getItem("devoe-lang") || "pt"; } catch (_) {}
+  if (!LANGS[lang]) lang = "pt";
+  const ORIG = new WeakMap(), SET = new WeakMap();      // texto original (pt) e o último valor que nós escrevemos
+  const ATTRS = ["placeholder", "aria-label", "title"];
+  const doText = n => {
+    const cur = n.nodeValue; if (!cur || !/[A-Za-zÀ-ú]/.test(cur)) return;
+    if (SET.get(n) !== cur) ORIG.set(n, cur);              // mudou por fora: este é o novo original
+    const o = ORIG.get(n) || cur, t = o.replace(/\s+/g, " ").trim();
+    let out = o;
+    if (lang !== "pt") { const r = tr(t, lang === "en" ? 0 : 1); if (r != null) out = o.replace(t.length === o.trim().length ? o.trim() : t, r); }
+    if (out !== cur) { SET.set(n, out); n.nodeValue = out; } else SET.set(n, cur);
+  };
+  const doEl = el => {
+    for (const a of ATTRS) {
+      const v = el.getAttribute(a); if (v == null || v.startsWith("data:")) continue;
+      const key = "data-o-" + a;
+      if (el.getAttribute("data-s-" + a) !== v) el.setAttribute(key, v);
+      const o = el.getAttribute(key) || v;
+      const out = lang === "pt" ? o : (tr(o.trim(), lang === "en" ? 0 : 1) ?? o);
+      el.setAttribute("data-s-" + a, out); if (out !== v) el.setAttribute(a, out);
+    }
+  };
+  const walk = root => {
+    if (root.nodeType === 3) { if (!/SCRIPT|STYLE/.test(root.parentNode && root.parentNode.nodeName)) doText(root); return; }
+    if (root.nodeType !== 1 || /SCRIPT|STYLE|SVG|IFRAME/.test(root.nodeName)) return;
+    doEl(root); root.querySelectorAll("[placeholder],[aria-label],[title]").forEach(doEl);
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => /SCRIPT|STYLE/.test(n.parentNode.nodeName) ? 2 : 1 });
+    let n; while ((n = w.nextNode())) doText(n);
+  };
+  let busy = false;
+  const mo = new MutationObserver(ms => { if (busy) return; busy = true;
+    for (const m of ms) { if (m.type === "characterData") doText(m.target); else if (m.type === "attributes") doEl(m.target); else m.addedNodes.forEach(walk); }
+    busy = false; });
+  const apply = () => { busy = true; walk(document.body); document.title = { pt: "DEVOE | Edição de Vídeo e Design", en: "DEVOE | Video Editing & Design", es: "DEVOE | Edición de Video y Diseño" }[lang];
+    document.documentElement.lang = { pt: "pt-BR", en: "en", es: "es" }[lang]; busy = false; ui(); };
+  /* seletor */
+  const box = document.getElementById("lang"), btn = document.getElementById("langBtn"), menu = document.getElementById("langMenu");
+  const ui = () => { if (!btn) return; btn.querySelector("b").textContent = lang.toUpperCase(); menu.querySelectorAll("button").forEach(b => b.setAttribute("aria-checked", b.dataset.l === lang)); };
+  if (box) {
+    btn.addEventListener("click", e => { e.stopPropagation(); const o = !box.classList.contains("open"); box.classList.toggle("open", o); btn.setAttribute("aria-expanded", o); });
+    menu.addEventListener("click", e => { const b = e.target.closest("button[data-l]"); if (!b) return; e.stopPropagation(); lang = b.dataset.l; try { localStorage.setItem("devoe-lang", lang); } catch (_) {} box.classList.remove("open"); btn.setAttribute("aria-expanded", false); apply(); });
+    document.addEventListener("click", e => { if (!box.contains(e.target)) { box.classList.remove("open"); btn.setAttribute("aria-expanded", false); } });
+    addEventListener("keydown", e => { if (e.key === "Escape") box.classList.remove("open"); });
+  }
+  apply();
+  mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
+  window.devoeLang = () => lang;
 })();
 </script>
 </body>
