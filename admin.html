@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>DEVOE | Painel</title>
+<link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:ital,wght@1,800;1,900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0A0A0A;--card:#121212;--ln:rgba(255,255,255,.08);--ln2:rgba(255,255,255,.14);--wh:#F5F5F5;--mu:#8a8a8a;--gd:#D9A900;--gd2:#F2C94C;--ok:#3ecf7a;--no:#ff5a5a;--hd:'Montserrat',sans-serif;--tx:'Inter',sans-serif}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--wh);font:400 14px/1.5 var(--tx);min-height:100vh}
+button{font:inherit;cursor:pointer}
+.wrap{max-width:1100px;margin:0 auto;padding:0 20px}
+header{position:sticky;top:0;z-index:10;background:rgba(10,10,10,.85);backdrop-filter:blur(12px);border-bottom:1px solid var(--ln)}
+.hb{display:flex;align-items:center;justify-content:space-between;height:68px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:#fff}
+.logo img{width:34px;height:34px}
+.logo b{font:900 italic 22px var(--hd)}.logo small{display:block;font:600 9px var(--tx);letter-spacing:.3em;color:var(--gd2)}
+.me{display:flex;align-items:center;gap:10px}
+.me img{width:34px;height:34px;border-radius:50%;object-fit:cover;background:#222}
+.me span{font-size:13px;color:#ccc}
+.btn{height:40px;padding:0 16px;border-radius:12px;border:1px solid var(--ln2);background:transparent;color:#ddd;font-weight:600;font-size:13px;display:inline-flex;align-items:center;gap:8px;transition:border-color .2s,background .2s}
+.btn:hover{border-color:var(--gd)}
+.btn.gold{background:linear-gradient(180deg,var(--gd2),var(--gd));border:0;color:#0a0a0a}
+.btn.ok{border-color:rgba(62,207,122,.45);color:var(--ok)}.btn.ok:hover{background:rgba(62,207,122,.1)}
+.btn.no{border-color:rgba(255,90,90,.4);color:var(--no)}.btn.no:hover{background:rgba(255,90,90,.1)}
+.btn.sm{height:34px;padding:0 12px;font-size:12px;border-radius:10px}
+.center{min-height:calc(100vh - 68px);display:grid;place-items:center;text-align:center;padding:40px 20px}
+.center h1{font:900 italic 34px/1.05 var(--hd);text-transform:uppercase;margin:16px 0 10px}
+.center p{color:var(--mu);max-width:380px;margin:0 auto 22px}
+.spin{width:36px;height:36px;margin:0 auto;border-radius:50%;border:3px solid rgba(217,169,0,.2);border-top-color:var(--gd2);animation:sp 1s linear infinite}@keyframes sp{to{transform:rotate(360deg)}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:26px 0 18px}
+.st{padding:16px 18px;border-radius:16px;background:var(--card);border:1px solid var(--ln)}
+.st b{display:block;font:900 italic 30px var(--hd);color:#fff}.st span{font-size:12px;color:var(--mu);letter-spacing:.04em}
+.st.hl{border-color:rgba(217,169,0,.45)}.st.hl b{color:var(--gd2)}
+.bar{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:14px}
+.tabs{display:flex;gap:4px;padding:4px;border-radius:14px;background:var(--card);border:1px solid var(--ln);overflow-x:auto}
+.tabs button{height:36px;padding:0 14px;border-radius:10px;border:0;background:transparent;color:var(--mu);font-weight:600;font-size:13px;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.tabs button.on{background:var(--gd);color:#0a0a0a}
+.tabs i{font-style:normal;min-width:20px;height:20px;padding:0 6px;border-radius:999px;background:rgba(255,255,255,.1);font-size:11px;line-height:20px}
+.tabs button.on i{background:rgba(0,0,0,.2)}
+.search{flex:1;min-width:200px;max-width:320px;height:40px;border-radius:12px;border:1px solid var(--ln2);background:var(--card);color:#fff;padding:0 14px;outline:none}
+.search:focus{border-color:var(--gd)}
+.list{display:flex;flex-direction:column;gap:8px;padding-bottom:60px}
+.row{display:grid;grid-template-columns:44px 1fr auto;gap:14px;align-items:center;padding:12px 14px;border-radius:14px;background:var(--card);border:1px solid var(--ln)}
+.row img{width:44px;height:44px;border-radius:50%;object-fit:cover;background:#222}
+.row .nm{font-weight:700;color:#fff}.row .em{font-size:12px;color:var(--mu);word-break:break-all}
+.row .meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px;font-size:12px;color:#aaa}
+.tag{display:inline-flex;align-items:center;gap:6px;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid var(--ln2)}
+.tag.num{border-color:rgba(217,169,0,.45);color:var(--gd2);letter-spacing:.06em}
+.tag.p{color:#f0c050;border-color:rgba(240,192,80,.4)}.tag.a{color:var(--ok);border-color:rgba(62,207,122,.4)}.tag.d{color:var(--no);border-color:rgba(255,90,90,.4)}
+.acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.empty{padding:50px 20px;text-align:center;color:var(--mu);border:1px dashed var(--ln2);border-radius:16px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;padding:12px 18px;border-radius:12px;background:#1a1a1a;border:1px solid var(--ln2);transition:.3s;z-index:20}
+.toast.on{opacity:1;transform:translateX(-50%)}
+[hidden]{display:none!important}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}.row{grid-template-columns:40px 1fr}.row .acts{grid-column:1/-1;justify-content:flex-start}.me span{display:none}.search{max-width:none}}
+</style>
+</head>
+<body>
+<header><div class="wrap hb">
+  <a class="logo" href="/"><img src="icons/favicon.svg" alt=""><div><b>DEVOE</b><small>PAINEL ADMIN</small></div></a>
+  <div class="me" id="me" hidden><img id="meAv" alt=""><span id="meName"></span><button class="btn sm" id="out">Sair</button></div>
+</div></header>
+
+<section class="center" id="vLoad"><div><div class="spin"></div></div></section>
+
+<section class="center" id="vLogin" hidden><div>
+  <img src="icons/favicon.svg" width="64" height="64" alt="">
+  <h1>Painel DEVOE</h1>
+  <p>Área restrita. Entre com a conta Google do administrador.</p>
+  <button class="btn gold" id="login" style="height:48px;padding:0 22px">Entrar com Google</button>
+</div></section>
+
+<section class="center" id="vDenied" hidden><div>
+  <h1>Acesso negado</h1>
+  <p>Esta conta não tem permissão de administrador. Entre com a conta certa.</p>
+  <button class="btn" id="swap">Usar outra conta</button>
+</div></section>
+
+<main class="wrap" id="vApp" hidden>
+  <div class="stats">
+    <div class="st hl"><b id="sPend">0</b><span>Pedidos pendentes</span></div>
+    <div class="st"><b id="sAppr">0</b><span>Alunos aprovados</span></div>
+    <div class="st"><b id="sUsers">0</b><span>Contas que já logaram</span></div>
+    <div class="st"><b id="sToday">0</b><span>Logins hoje</span></div>
+  </div>
+  <div class="bar">
+    <div class="tabs" id="tabs">
+      <button data-t="pending" class="on">Pendentes <i id="cPend">0</i></button>
+      <button data-t="approved">Aprovados <i id="cAppr">0</i></button>
+      <button data-t="denied">Recusados <i id="cDen">0</i></button>
+      <button data-t="logins">Histórico de logins <i id="cLog">0</i></button>
+    </div>
+    <input class="search" id="q" placeholder="Buscar nome, e-mail ou numérica…">
+  </div>
+  <div class="list" id="list"></div>
+</main>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, query, orderBy, limit, onSnapshot, doc, updateDoc, deleteDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app = initializeApp({ apiKey: "AIzaSyD_wM8hkldpmiSVvnz-beT7r-1PUQ7hevA", authDomain: "devoe-469a6.firebaseapp.com", projectId: "devoe-469a6", storageBucket: "devoe-469a6.firebasestorage.app", messagingSenderId: "390681910799", appId: "1:390681910799:web:e08cfe8e3d592574368d7a" });
+const auth = getAuth(app), db = getFirestore(app);
+const $ = s => document.querySelector(s);
+const view = v => ["vLoad", "vLogin", "vDenied", "vApp"].forEach(id => $("#" + id).hidden = id !== v);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = ts => { if (!ts || !ts.toDate) return "—"; const d = ts.toDate(); return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); };
+const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 2200); };
+let REQ = [], LOG = [], USERS = 0, tab = "pending", subs = [];
+const login = async () => { const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" }); try { await signInWithPopup(auth, p); } catch (e) { if (e.code !== "auth/popup-closed-by-user") toast("Não foi possível entrar."); } };
+$("#login").onclick = login; $("#swap").onclick = async () => { await signOut(auth); login(); }; $("#out").onclick = () => signOut(auth);
+const stop = () => { subs.forEach(u => u()); subs = []; };
+onAuthStateChanged(auth, u => {
+  stop();
+  if (!u) { $("#me").hidden = true; return view("vLogin"); }
+  $("#me").hidden = false; $("#meAv").src = u.photoURL || ""; $("#meName").textContent = u.displayName || "";
+  view("vLoad");
+  /* só o administrador consegue ler os pedidos (regras do Firestore) */
+  subs.push(onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), s => { REQ = s.docs.map(d => ({ id: d.id, ...d.data() })); view("vApp"); draw(); }, e => { console.warn(e); view("vDenied"); }));
+  subs.push(onSnapshot(query(collection(db, "logins"), orderBy("at", "desc"), limit(300)), s => { LOG = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); }, () => {}));
+  subs.push(onSnapshot(collection(db, "users"), s => { USERS = s.size; draw(); }, () => {}));
+});
+const setStatus = async (id, status) => { try { await updateDoc(doc(db, "requests", id), { status, decidedAt: serverTimestamp() }); toast(status === "approved" ? "Acesso aprovado ✓" : status === "denied" ? "Pedido recusado" : "Atualizado"); } catch (e) { toast("Erro ao salvar"); console.warn(e); } };
+const remove = async id => { if (!confirm("Remover este pedido? A pessoa vai precisar pedir acesso de novo.")) return; try { await deleteDoc(doc(db, "requests", id)); toast("Pedido removido"); } catch (e) { toast("Erro ao remover"); } };
+const draw = () => {
+  const by = s => REQ.filter(r => r.status === s);
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  $("#sPend").textContent = $("#cPend").textContent = by("pending").length;
+  $("#sAppr").textContent = $("#cAppr").textContent = by("approved").length;
+  $("#cDen").textContent = by("denied").length; $("#cLog").textContent = LOG.length;
+  $("#sUsers").textContent = USERS; $("#sToday").textContent = LOG.filter(l => l.at && l.at.toDate && l.at.toDate() >= today).length;
+  const q = $("#q").value.trim().toLowerCase(), hit = o => !q || [o.name, o.email, o.numerica].some(v => String(v || "").toLowerCase().includes(q));
+  let html = "";
+  if (tab === "logins") {
+    const rows = LOG.filter(hit);
+    html = rows.map(l => `<div class="row"><img src="${esc(l.photo)}" alt="" referrerpolicy="no-referrer"><div><div class="nm">${esc(l.name || "Sem nome")}</div><div class="em">${esc(l.email)}</div>
+      <div class="meta"><span>🕒 ${fmt(l.at)}</span><span>📱 ${esc(l.device || "—")}</span><span>🌐 ${esc((l.lang || "pt").toUpperCase())}</span></div></div></div>`).join("") || `<div class="empty">Nenhum login registrado ainda.</div>`;
+  } else {
+    const rows = by(tab).filter(hit);
+    const lab = { pending: ["p", "Pendente"], approved: ["a", "Aprovado"], denied: ["d", "Recusado"] };
+    html = rows.map(r => `<div class="row"><img src="${esc(r.photo)}" alt="" referrerpolicy="no-referrer"><div><div class="nm">${esc(r.name || "Sem nome")}</div><div class="em">${esc(r.email)}</div>
+      <div class="meta"><span class="tag num">Numérica ${esc(r.numerica)}</span><span class="tag ${lab[r.status][0]}">${lab[r.status][1]}</span><span>Pedido: ${fmt(r.createdAt)}</span>${r.decidedAt ? `<span>Decisão: ${fmt(r.decidedAt)}</span>` : ""}</div></div>
+      <div class="acts">${r.status !== "approved" ? `<button class="btn sm ok" data-a="approved" data-id="${r.id}">✓ Aprovar</button>` : ""}${r.status === "pending" ? `<button class="btn sm no" data-a="denied" data-id="${r.id}">✕ Recusar</button>` : ""}${r.status === "approved" ? `<button class="btn sm no" data-a="denied" data-id="${r.id}">Revogar acesso</button>` : ""}<button class="btn sm" data-del="${r.id}">Remover</button></div></div>`).join("")
+      || `<div class="empty">${{ pending: "Nenhum pedido pendente. 🎉", approved: "Ninguém aprovado ainda.", denied: "Nenhum pedido recusado." }[tab]}</div>`;
+  }
+  $("#list").innerHTML = html;
+};
+$("#list").addEventListener("click", e => { const a = e.target.closest("[data-a]"), d = e.target.closest("[data-del]"); if (a) setStatus(a.dataset.id, a.dataset.a); if (d) remove(d.dataset.del); });
+$("#tabs").addEventListener("click", e => { const b = e.target.closest("button[data-t]"); if (!b) return; tab = b.dataset.t; $("#tabs").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); draw(); });
+$("#q").addEventListener("input", draw);
+</script>
+</body>
+</html>

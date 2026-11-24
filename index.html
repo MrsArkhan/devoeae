@@ -2482,6 +2482,37 @@ body.reel-mini #youtube{z-index:60!important}
 .lmenu button[aria-checked="true"]::after{content:"✓";margin-left:auto;color:var(--gd);font-size:12px}
 @media (max-width:760px){.lbtn{height:36px;padding:0 10px 0 8px;gap:5px}.lbtn svg{width:14px;height:14px}.lbtn b{font-size:10px}.lmenu{position:fixed;top:64px;right:12px}}
 @media (max-width:380px){.lbtn svg{display:none}.lbtn{padding:0 9px}}
+/* ===== login ASCOM (Google + numérica) ===== */
+.gate{position:fixed;inset:0;z-index:196;background:rgba(0,0,0,.86);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .35s}
+.gate.on{opacity:1}.gate[hidden]{display:none}
+.gbox{position:relative;width:min(420px,100%);padding:34px 30px 28px;border-radius:22px;background:linear-gradient(180deg,#141414,#0d0d0d);border:1px solid rgba(217,169,0,.35);box-shadow:0 40px 100px rgba(0,0,0,.7),0 0 60px rgba(217,169,0,.08);text-align:center;transform:translateY(16px) scale(.98);transition:transform .45s var(--ease)}
+.gate.on .gbox{transform:none}
+.gx{position:absolute;top:12px;right:12px;width:32px;height:32px;border-radius:50%;border:0;background:rgba(255,255,255,.06);color:#bbb;cursor:pointer}
+.gcrest{width:68px;height:68px;border-radius:50%;margin:0 auto 14px;display:block}
+.gstep{display:none}.gstep.on{display:block;animation:gIn .4s var(--ease)}
+@keyframes gIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.gk{display:inline-flex;align-items:center;gap:8px;font:600 10px var(--tx);letter-spacing:.24em;text-transform:uppercase;color:var(--gd2)}
+.gk i{width:7px;height:7px;border-radius:50%;background:var(--gd);box-shadow:0 0 10px var(--gd)}
+.gh{font:900 italic 26px/1.1 var(--hd);text-transform:uppercase;color:#fff;margin:10px 0 8px}
+.gp{font-size:14px;line-height:1.55;color:#a9a9a9;margin:0 0 18px}
+.gbtn{width:100%;height:50px;border-radius:14px;border:0;background:linear-gradient(180deg,var(--gd2),var(--gd));color:#0a0a0a;font:700 14px var(--tx);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;transition:transform .2s,box-shadow .3s}
+.gbtn:hover{box-shadow:0 10px 30px rgba(217,169,0,.3)}.gbtn:active{transform:scale(.98)}
+.gbtn[disabled]{opacity:.6;pointer-events:none}
+.gbtn.google{background:#fff;color:#1f1f1f}
+.gbtn.google svg{width:20px;height:20px}
+.gsmall{font-size:11px;line-height:1.5;color:#6f6f6f;margin:14px 0 0}
+.glink{display:block;margin:14px auto 0;background:none;border:0;color:#8a8a8a;font:600 12px var(--tx);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.guser{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);text-align:left;margin-bottom:6px}
+.guser img{width:38px;height:38px;border-radius:50%;object-fit:cover;background:#222}
+.guser b{display:block;font:700 14px var(--tx);color:#fff}.guser small{font-size:12px;color:#8a8a8a}
+.ginp{width:100%;height:56px;border-radius:14px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.04);color:#fff;text-align:center;font:800 24px var(--hd);letter-spacing:.2em;margin-bottom:12px;outline:none}
+.ginp:focus{border-color:var(--gd)}
+.ginp.err{border-color:#ff4d4d;animation:shake .4s}
+.gspin{width:38px;height:38px;margin:4px auto 10px;border-radius:50%;border:3px solid rgba(217,169,0,.2);border-top-color:var(--gd2);animation:gsp 1s linear infinite}
+@keyframes gsp{to{transform:rotate(360deg)}}
+.gtag{display:inline-block;padding:8px 14px;border-radius:999px;border:1px solid rgba(217,169,0,.35);font-size:12px;color:#bbb;margin:0}
+.gtag b{color:var(--gd2);letter-spacing:.1em}
+@media (max-width:760px){.gbox{padding:28px 20px 22px}.gh{font-size:22px}}
 </style>
 </head>
 <body>
@@ -2549,6 +2580,46 @@ body.reel-mini #youtube{z-index:60!important}
 <div class="vtoast" id="vtoast" role="status" aria-live="polite" hidden>
   <a class="vt-link" id="vtLink" target="_blank" rel="noopener"><img class="vt-cv" id="vtCv" alt=""><span class="vt-txt"><small><i></i>Novo vídeo · TikTok</small><b id="vtTitle"></b><em>Assistir agora →</em></span></a>
   <button class="vt-x" id="vtX" aria-label="Fechar notificação">✕</button><span class="vt-bar"></span>
+</div>
+<div class="gate" id="gate" hidden aria-modal="true" role="dialog" aria-label="Login ASCOM">
+  <div class="gbox">
+    <button class="gx" id="gX" aria-label="Fechar">✕</button>
+    <img class="gcrest" id="gCrest" alt="">
+    <div class="gstep" data-s="loading"><div class="gspin"></div><p class="gp">Conectando…</p></div>
+    <div class="gstep" data-s="login">
+      <span class="gk"><i></i>Código correto · ASCOM</span>
+      <h3 class="gh">Entre para continuar</h3>
+      <p class="gp">Faça login com sua conta Google para pedir acesso ao material de apoio.</p>
+      <button class="gbtn google" id="gGoogle"><svg viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="m6.3 14.7 6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-7.9l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Entrar com Google</button>
+      <p class="gsmall">Seu nome, e-mail e numérica ficam registrados apenas para controle de acesso do curso.</p>
+    </div>
+    <div class="gstep" data-s="num">
+      <div class="guser"><img id="gAv" alt=""><div><b id="gName"></b><small id="gMail"></small></div></div>
+      <h3 class="gh">Informe sua numérica</h3>
+      <p class="gp">O professor vai conferir e liberar o seu acesso.</p>
+      <input class="ginp" id="gNum" inputmode="numeric" autocomplete="off" maxlength="12" placeholder="Ex.: 1234" aria-label="Numérica">
+      <button class="gbtn" id="gSend">Solicitar acesso</button>
+      <button class="glink" data-out>Usar outra conta</button>
+    </div>
+    <div class="gstep" data-s="pending">
+      <div class="gspin"></div>
+      <h3 class="gh">Pedido enviado!</h3>
+      <p class="gp">Aguardando aprovação do professor. Assim que for liberado, o acesso abre sozinho.</p>
+      <p class="gtag">Numérica <b id="gNumShow"></b></p>
+      <button class="glink" data-out>Usar outra conta</button>
+    </div>
+    <div class="gstep" data-s="denied">
+      <h3 class="gh">Acesso não autorizado</h3>
+      <p class="gp">Seu pedido não foi aprovado. Confira a numérica e envie de novo.</p>
+      <button class="gbtn" id="gRetry">Corrigir numérica</button>
+      <button class="glink" data-out>Usar outra conta</button>
+    </div>
+    <div class="gstep" data-s="error">
+      <h3 class="gh">Não foi possível conectar</h3>
+      <p class="gp" id="gErr">Verifique sua internet e tente de novo.</p>
+      <button class="gbtn" id="gTry">Tentar de novo</button>
+    </div>
+  </div>
 </div>
 <header class="hdr" id="hdr">
   <div class="wrap hbar">
@@ -3243,10 +3314,20 @@ $("#cform").addEventListener("submit", ev => {
   const st = $$("#steps div");
   if (!v) { m.className = "msg no"; m.textContent = "DIGITE O CÓDIGO PARA CONTINUAR"; return; }
   if (v === CONFIG.ascomCode.toUpperCase()) {
-    store.set();
-    st.forEach(d => d.classList.add("on"));
-    m.className = "msg ok"; m.textContent = "ACESSO LIBERADO — ABRINDO...";
-    setTimeout(() => { $("#wcrest").src = ASCOM_SRC(); $("#welcome").classList.add("on"); $("#wgo").focus(); }, 700);
+    const go = () => {
+      store.set();
+      st.forEach(d => d.classList.add("on"));
+      m.className = "msg ok"; m.textContent = "ACESSO LIBERADO — ABRINDO...";
+      setTimeout(() => { $("#wcrest").src = ASCOM_SRC(); $("#welcome").classList.add("on"); $("#wgo").focus(); }, 700);
+    };
+    st.forEach((d, i) => d.classList.toggle("on", i === 0));
+    m.className = "msg ok"; m.textContent = "CÓDIGO CORRETO — FAÇA LOGIN";
+    /* o login com Google e a aprovação da numérica liberam a entrada */
+    let tries = 0;
+    const call = () => { if (window.devoeGate) return window.devoeGate(go);
+      if (++tries > 40) { m.className = "msg no"; m.textContent = "SEM CONEXÃO — TENTE NOVAMENTE"; return; }
+      m.textContent = "CARREGANDO LOGIN..."; setTimeout(call, 200); };
+    call();
   } else {
     st.forEach((d, i) => d.classList.toggle("on", i === 0));
     m.className = "msg no"; m.textContent = "ACESSO NEGADO — CÓDIGO INVÁLIDO";
@@ -3256,6 +3337,7 @@ $("#cform").addEventListener("submit", ev => {
 
 /* página ASCOM */
 /* ---------- rotas: #ascom só abre com código ---------- */
+window.ASCOM_SRC = () => ASCOM_SRC();
 function route(){
   const isAscom = location.hash === "#ascom";
   if (isAscom && !store.get()) {
@@ -4055,7 +4137,16 @@ route();
 "Digite seu código de acesso...":["Enter your access code...","Ingresa tu código de acceso..."],"Código de acesso":["Access code","Código de acceso"],"Seu e-mail":["Your email","Tu correo"],
 "Enviar":["Send","Enviar"],"Categorias de download":["Download categories","Categorías de descarga"],"Buscar download...":["Search downloads...","Buscar descarga..."],"Buscar download":["Search downloads","Buscar descarga"],
 "Comparar esboço e flyer pronta":["Compare sketch and finished flyer","Comparar boceto y flyer terminado"],"Prévia do download":["Download preview","Vista previa de la descarga"],"Fechar":["Close","Cerrar"],"Arte":["Artwork","Arte"],"Vídeo":["Video","Video"],
-"Idioma":["Language","Idioma"]
+"Idioma":["Language","Idioma"],
+"CÓDIGO CORRETO — FAÇA LOGIN":["CORRECT CODE — PLEASE SIGN IN","CÓDIGO CORRECTO — INICIA SESIÓN"],"CARREGANDO LOGIN...":["LOADING SIGN-IN...","CARGANDO INICIO DE SESIÓN..."],"SEM CONEXÃO — TENTE NOVAMENTE":["NO CONNECTION — TRY AGAIN","SIN CONEXIÓN — INTÉNTALO DE NUEVO"],
+"Conectando…":["Connecting…","Conectando…"],"Código correto · ASCOM":["Correct code · ASCOM","Código correcto · ASCOM"],"Entre para continuar":["Sign in to continue","Inicia sesión para continuar"],
+"Faça login com sua conta Google para pedir acesso ao material de apoio.":["Sign in with your Google account to request access to the support material.","Inicia sesión con tu cuenta de Google para solicitar acceso al material de apoyo."],
+"Entrar com Google":["Sign in with Google","Iniciar sesión con Google"],"Seu nome, e-mail e numérica ficam registrados apenas para controle de acesso do curso.":["Your name, email and student number are stored only for course access control.","Tu nombre, correo y número de alumno se guardan solo para el control de acceso del curso."],
+"Informe sua numérica":["Enter your student number","Ingresa tu número de alumno"],"O professor vai conferir e liberar o seu acesso.":["The teacher will check it and grant your access.","El profesor lo revisará y liberará tu acceso."],
+"Solicitar acesso":["Request access","Solicitar acceso"],"Usar outra conta":["Use another account","Usar otra cuenta"],"Pedido enviado!":["Request sent!","¡Solicitud enviada!"],
+"Aguardando aprovação do professor. Assim que for liberado, o acesso abre sozinho.":["Waiting for the teacher's approval. Once approved, access opens automatically.","Esperando la aprobación del profesor. Cuando sea aprobada, el acceso se abre solo."],
+"Numérica":["Student number","Número de alumno"],"Acesso não autorizado":["Access not authorized","Acceso no autorizado"],"Seu pedido não foi aprovado. Confira a numérica e envie de novo.":["Your request wasn't approved. Check your student number and send it again.","Tu solicitud no fue aprobada. Revisa tu número y envíalo de nuevo."],
+"Corrigir numérica":["Fix student number","Corregir número"],"Não foi possível conectar":["Couldn't connect","No se pudo conectar"],"Verifique sua internet e tente de novo.":["Check your internet and try again.","Revisa tu internet e inténtalo de nuevo."],"Tentar de novo":["Try again","Intentar de nuevo"]
   };
   const PACK = {"ARBUSTO":["BUSH","ARBUSTO"],"BAMBU":["BAMBOO","BAMBÚ"],"BARRIL":["BARREL","BARRIL"],"CAIXA DE SOM":["SPEAKER","ALTAVOZ"],"CANHÃO DE LUZ":["SPOTLIGHT","CAÑÓN DE LUZ"],"CORDA":["ROPE","CUERDA"],"CORRENTE":["CHAIN","CADENA"],"ESTRUTURA DE FERRO":["IRON TRUSS","ESTRUCTURA DE HIERRO"],"PLACA DE MADEIRA":["WOODEN SIGN","LETRERO DE MADERA"],"PORTAL":["PORTAL","PORTAL"],"PLACA DE FERRO":["IRON SIGN","LETRERO DE HIERRO"],"LÂMPADA":["LIGHT BULB","BOMBILLA"],"VEÍCULOS":["VEHICLES","VEHÍCULOS"],"NEON":["NEON","NEÓN"],"PLACA DE NEON":["NEON SIGN","LETRERO DE NEÓN"],"FOGO":["FIRE","FUEGO"],"BACKGROUND":["BACKGROUND","FONDO"]};
   const cap = s => s.toLowerCase().replace(/(^|\s)(\S)/g, (m, a, b) => a + b.toUpperCase());
@@ -4132,6 +4223,70 @@ route();
   mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   window.devoeLang = () => lang;
 })();
+</script>
+<script type="module">
+/* ---------- login ASCOM com Google + numérica (Firebase) ---------- */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const app = initializeApp({ apiKey: "AIzaSyD_wM8hkldpmiSVvnz-beT7r-1PUQ7hevA", authDomain: "devoe-469a6.firebaseapp.com", projectId: "devoe-469a6", storageBucket: "devoe-469a6.firebasestorage.app", messagingSenderId: "390681910799", appId: "1:390681910799:web:e08cfe8e3d592574368d7a" });
+const auth = getAuth(app), db = getFirestore(app);
+const $ = s => document.querySelector(s), gate = $("#gate");
+let onOk = null, unsub = null, user = null, ready = false;
+const step = s => { gate.querySelectorAll(".gstep").forEach(e => e.classList.toggle("on", e.dataset.s === s)); };
+const open = () => { gate.hidden = false; requestAnimationFrame(() => gate.classList.add("on")); };
+const close = () => { gate.classList.remove("on"); setTimeout(() => gate.hidden = true, 350); if (unsub) { unsub(); unsub = null; } };
+const device = () => { const u = navigator.userAgent; return (/iPhone|iPad/.test(u) ? "iPhone/iPad" : /Android/.test(u) ? "Android" : /Windows/.test(u) ? "Windows" : /Mac/.test(u) ? "Mac" : "Outro") + (/Mobile/.test(u) ? " · celular" : ""); };
+/* registra o login (uma vez por sessão) */
+const logLogin = async u => {
+  const k = "devoe-log-" + u.uid; try { if (sessionStorage.getItem(k)) return; sessionStorage.setItem(k, "1"); } catch (_) {}
+  const base = { uid: u.uid, name: u.displayName || "", email: u.email || "", photo: u.photoURL || "" };
+  try {
+    const ref = doc(db, "users", u.uid), snap = await getDoc(ref);
+    await setDoc(ref, { ...base, lastLogin: serverTimestamp(), loginCount: increment(1), device: device(), ...(snap.exists() ? {} : { firstLogin: serverTimestamp() }) }, { merge: true });
+    await addDoc(collection(db, "logins"), { ...base, at: serverTimestamp(), device: device(), lang: (window.devoeLang && window.devoeLang()) || "pt" });
+  } catch (e) { console.warn("log", e); }
+};
+const fillUser = u => { $("#gAv").src = u.photoURL || ""; $("#gName").textContent = u.displayName || "Aluno(a)"; $("#gMail").textContent = u.email || ""; };
+/* acompanha o pedido em tempo real */
+const watch = u => {
+  if (unsub) unsub();
+  step("loading");
+  unsub = onSnapshot(doc(db, "requests", u.uid), s => {
+    const r = s.data();
+    if (!r) { fillUser(u); step("num"); setTimeout(() => $("#gNum").focus(), 300); return; }
+    if (r.status === "approved") { close(); onOk && onOk(); return; }
+    $("#gNumShow").textContent = r.numerica || "";
+    if (r.status === "denied") { fillUser(u); step("denied"); return; }
+    step("pending");
+  }, e => { $("#gErr").textContent = "Sem permissão para ler o pedido. Tente de novo em instantes."; step("error"); console.warn(e); });
+};
+onAuthStateChanged(auth, u => { user = u; ready = true; if (u) logLogin(u); if (!gate.hidden) u ? watch(u) : step("login"); });
+/* chamado pelo site quando o código ASCOM está correto */
+window.devoeGate = cb => { onOk = cb; $("#gCrest").src = (window.ASCOM_SRC && window.ASCOM_SRC()) || ""; open(); if (!ready) { step("loading"); return; } user ? watch(user) : step("login"); };
+$("#gGoogle").onclick = async () => {
+  const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" });
+  try { step("loading"); await signInWithPopup(auth, p); }
+  catch (e) {
+    if (e.code === "auth/popup-blocked" || e.code === "auth/operation-not-supported-in-this-environment") return signInWithRedirect(auth, p);
+    if (e.code === "auth/popup-closed-by-user" || e.code === "auth/cancelled-popup-request") return step("login");
+    $("#gErr").textContent = e.code === "auth/unauthorized-domain" ? "Este domínio ainda não está autorizado no Firebase." : "Não foi possível entrar com o Google. Tente de novo."; step("error");
+  }
+};
+$("#gSend").onclick = async () => {
+  const n = $("#gNum").value.replace(/\D/g, "");
+  if (n.length < 1) { $("#gNum").classList.remove("err"); void $("#gNum").offsetWidth; $("#gNum").classList.add("err"); return; }
+  $("#gSend").disabled = true;
+  try { await setDoc(doc(db, "requests", user.uid), { uid: user.uid, name: user.displayName || "", email: user.email || "", photo: user.photoURL || "", numerica: n, status: "pending", createdAt: serverTimestamp() }); }
+  catch (e) { $("#gErr").textContent = "Não foi possível enviar o pedido. Tente de novo."; step("error"); console.warn(e); }
+  $("#gSend").disabled = false;
+};
+$("#gNum").addEventListener("keydown", e => { if (e.key === "Enter") $("#gSend").click(); });
+$("#gRetry").onclick = () => { fillUser(user); $("#gNum").value = ""; step("num"); };
+$("#gTry").onclick = () => user ? watch(user) : step("login");
+gate.querySelectorAll("[data-out]").forEach(b => b.onclick = async () => { if (unsub) { unsub(); unsub = null; } await signOut(auth); step("login"); });
+$("#gX").onclick = close;
+gate.addEventListener("click", e => { if (e.target === gate) close(); });
 </script>
 </body>
 </html>
