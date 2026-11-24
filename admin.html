@@ -53,6 +53,7 @@ header{position:sticky;top:0;z-index:10;background:rgba(10,10,10,.85);backdrop-f
 .tag.num{border-color:rgba(217,169,0,.45);color:var(--gd2);letter-spacing:.06em}
 .tag.p{color:#f0c050;border-color:rgba(240,192,80,.4)}.tag.a{color:var(--ok);border-color:rgba(62,207,122,.4)}.tag.d{color:var(--no);border-color:rgba(255,90,90,.4)}
 .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.vav{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#1c1c1c;font-size:18px}
 .empty{padding:50px 20px;text-align:center;color:var(--mu);border:1px dashed var(--ln2);border-radius:16px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);opacity:0;padding:12px 18px;border-radius:12px;background:#1a1a1a;border:1px solid var(--ln2);transition:.3s;z-index:20}
 .toast.on{opacity:1;transform:translateX(-50%)}
@@ -85,7 +86,7 @@ header{position:sticky;top:0;z-index:10;background:rgba(10,10,10,.85);backdrop-f
   <div class="stats">
     <div class="st hl"><b id="sAppr">0</b><span>Alunos com acesso</span></div>
     <div class="st"><b id="sPend">0</b><span>Bloqueados</span></div>
-    <div class="st"><b id="sUsers">0</b><span>Contas que já logaram</span></div>
+    <div class="st"><b id="sVisit">0</b><span>Visitas hoje</span></div>
     <div class="st"><b id="sToday">0</b><span>Logins hoje</span></div>
   </div>
   <div class="bar">
@@ -94,6 +95,7 @@ header{position:sticky;top:0;z-index:10;background:rgba(10,10,10,.85);backdrop-f
       <button data-t="denied">Bloqueados <i id="cDen">0</i></button>
       <button data-t="pending">Pendentes <i id="cPend">0</i></button>
       <button data-t="logins">Histórico de logins <i id="cLog">0</i></button>
+      <button data-t="visits">Visitas ao site <i id="cVis">0</i></button>
     </div>
     <input class="search" id="q" placeholder="Buscar nome, e-mail, turma ou numérica…">
   </div>
@@ -112,7 +114,7 @@ const view = v => ["vLoad", "vLogin", "vDenied", "vApp"].forEach(id => $("#" + i
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = ts => { if (!ts || !ts.toDate) return "—"; const d = ts.toDate(); return d.toLocaleDateString("pt-BR") + " às " + d.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" }); };
 const toast = m => { const t = $("#toast"); t.textContent = m; t.classList.add("on"); clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove("on"), 2200); };
-let REQ = [], LOG = [], USERS = 0, tab = "approved", subs = [];
+let REQ = [], LOG = [], VIS = [], USERS = 0, tab = "approved", subs = [];
 const login = async () => { const p = new GoogleAuthProvider(); p.setCustomParameters({ prompt: "select_account" }); try { await signInWithPopup(auth, p); } catch (e) { if (e.code !== "auth/popup-closed-by-user") toast("Não foi possível entrar."); } };
 $("#login").onclick = login; $("#swap").onclick = async () => { await signOut(auth); login(); }; $("#out").onclick = () => signOut(auth);
 const stop = () => { subs.forEach(u => u()); subs = []; };
@@ -125,6 +127,7 @@ onAuthStateChanged(auth, u => {
   subs.push(onSnapshot(query(collection(db, "requests"), orderBy("createdAt", "desc")), s => { REQ = s.docs.map(d => ({ id: d.id, ...d.data() })); view("vApp"); draw(); }, e => { console.warn(e); view("vDenied"); }));
   subs.push(onSnapshot(query(collection(db, "logins"), orderBy("at", "desc"), limit(300)), s => { LOG = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); }, () => {}));
   subs.push(onSnapshot(collection(db, "users"), s => { USERS = s.size; draw(); }, () => {}));
+  subs.push(onSnapshot(query(collection(db, "visits"), orderBy("at", "desc"), limit(500)), s => { VIS = s.docs.map(d => ({ id: d.id, ...d.data() })); draw(); }, e => console.warn(e)));
 });
 const setStatus = async (id, status) => { try { await updateDoc(doc(db, "requests", id), { status, decidedAt: serverTimestamp() }); toast(status === "approved" ? "Acesso liberado ✓" : status === "denied" ? "Acesso bloqueado" : "Atualizado"); } catch (e) { toast("Erro ao salvar"); console.warn(e); } };
 const remove = async id => { if (!confirm("Apagar este registro? Se a pessoa logar de novo, ela entra automaticamente. Para impedir a entrada, use Bloquear acesso.")) return; try { await deleteDoc(doc(db, "requests", id)); toast("Pedido removido"); } catch (e) { toast("Erro ao remover"); } };
@@ -134,10 +137,14 @@ const draw = () => {
   $("#cPend").textContent = by("pending").length; $("#sPend").textContent = by("denied").length;
   $("#sAppr").textContent = $("#cAppr").textContent = by("approved").length;
   $("#cDen").textContent = by("denied").length; $("#cLog").textContent = LOG.length;
-  $("#sUsers").textContent = USERS; $("#sToday").textContent = LOG.filter(l => l.at && l.at.toDate && l.at.toDate() >= today).length;
+  $("#sVisit").textContent = VIS.filter(v => v.at && v.at.toDate && v.at.toDate() >= today).length; $("#cVis").textContent = VIS.length; $("#sToday").textContent = LOG.filter(l => l.at && l.at.toDate && l.at.toDate() >= today).length;
   const q = $("#q").value.trim().toLowerCase(), hit = o => !q || [o.name, o.email, o.numerica, o.curso, (o.curso || "") + " " + (o.numerica || "")].some(v => String(v || "").toLowerCase().includes(q));
   let html = "";
-  if (tab === "logins") {
+  if (tab === "visits") {
+    const rows = VIS.filter(v => !q || [v.name, v.email, v.device, v.browser, v.ref, v.page].some(x => String(x || "").toLowerCase().includes(q)));
+    html = rows.map(v => `<div class="row">${v.photo ? `<img src="${esc(v.photo)}" alt="" referrerpolicy="no-referrer">` : `<span class="vav">👤</span>`}<div><div class="nm">${esc(v.name || "Visitante")}</div><div class="em">${esc(v.email || "sem login")}</div>
+      <div class="meta"><span>🕒 ${fmt(v.at)}</span><span>📱 ${esc(v.device || "—")}</span><span>🧭 ${esc(v.browser || "—")}</span><span>🔗 ${esc(v.ref || "Direto")}</span>${v.page && v.page !== "/" ? `<span>📄 ${esc(v.page)}</span>` : ""}</div></div></div>`).join("") || `<div class="empty">Nenhuma visita registrada ainda.</div>`;
+  } else if (tab === "logins") {
     const rows = LOG.filter(hit);
     html = rows.map(l => `<div class="row"><img src="${esc(l.photo)}" alt="" referrerpolicy="no-referrer"><div><div class="nm">${esc(l.name || "Sem nome")}</div><div class="em">${esc(l.email)}</div>
       <div class="meta"><span>🕒 ${fmt(l.at)}</span><span>📱 ${esc(l.device || "—")}</span><span>🌐 ${esc((l.lang || "pt").toUpperCase())}</span></div></div></div>`).join("") || `<div class="empty">Nenhum login registrado ainda.</div>`;

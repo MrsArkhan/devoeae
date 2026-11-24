@@ -4444,7 +4444,19 @@ if (flag()) {
   getRedirectResult(auth).then(() => { redirectDone = true; if (!auth.currentUser) { clearFlag(); step("login"); } })
     .catch(e => { redirectDone = true; clearFlag(); $("#gErr").textContent = "Não foi possível entrar com o Google. Tente de novo."; step("error"); console.warn(e); });
 }
-onAuthStateChanged(auth, u => { user = u; ready = true; if (u) logLogin(u);
+/* registra cada visita ao site (uma vez por sessão), com ou sem login */
+let visitLogged = false;
+const logVisit = u => {
+  if (visitLogged) return; visitLogged = true;
+  try { if (sessionStorage.getItem("devoe-visit")) return; sessionStorage.setItem("devoe-visit", "1"); } catch (_) {}
+  const ua = navigator.userAgent, cut = (v, n) => String(v || "").slice(0, n);
+  const browser = /Edg\//.test(ua) ? "Edge" : /OPR\/|Opera/.test(ua) ? "Opera" : /SamsungBrowser/.test(ua) ? "Samsung" : /Instagram/.test(ua) ? "Instagram" : /FBAN|FBAV/.test(ua) ? "Facebook" : /WhatsApp/.test(ua) ? "WhatsApp" : /Chrome\//.test(ua) ? "Chrome" : /Safari\//.test(ua) ? "Safari" : /Firefox\//.test(ua) ? "Firefox" : "Outro";
+  let ref = "Direto"; try { const q = new URLSearchParams(location.search); if (q.get("utm_source")) ref = q.get("utm_source"); else if (document.referrer) { const h = new URL(document.referrer).hostname.replace(/^www\./, ""); if (h !== location.hostname) ref = h; } } catch (_) {}
+  const d = { at: serverTimestamp(), device: cut(device(), 40), browser, ref: cut(ref, 60), page: cut(location.pathname + location.hash, 60), lang: cut(navigator.language, 12), screen: `${screen.width}x${screen.height}` };
+  if (u) Object.assign(d, { uid: u.uid, name: cut(u.displayName, 80), email: cut(u.email, 100), photo: cut(u.photoURL, 400) });
+  addDoc(collection(db, "visits"), d).catch(e => console.warn("visit", e));
+};
+onAuthStateChanged(auth, u => { user = u; ready = true; if (u) logLogin(u); logVisit(u);
   if (u && flag()) { clearFlag(); if (!onOk) onOk = window.ascomGo; if (gate.hidden) open(); watch(u); return; }
   if (!gate.hidden && redirectDone) u ? watch(u) : step("login"); });
 /* chamado pelo site quando o código ASCOM está correto */
