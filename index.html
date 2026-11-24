@@ -2563,6 +2563,34 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .gturma button[aria-checked="true"] b{color:var(--gd2)}
 .gturma button:active{transform:scale(.96)}
 .gturma.err button{border-color:rgba(255,77,77,.6);animation:shake .4s}
+
+/* ===== retrospectiva: react ===== */
+.rx{position:relative;padding:40px 0 70px}
+.rx-wrap{width:min(1240px,calc(100% - 48px));margin:0 auto;display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.3fr);gap:clamp(30px,5vw,70px);align-items:center;padding:34px;border-radius:24px;background:linear-gradient(135deg,rgba(217,169,0,.07),rgba(255,255,255,.015) 50%);border:1px solid rgba(255,255,255,.07)}
+.rx .kick{display:inline-flex;align-items:center;gap:10px}
+.rx-live{width:8px;height:8px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 10px #ff3b3b;animation:pulse 1.4s infinite}
+.rx-h{font:900 italic clamp(34px,4vw,56px)/.95 var(--hd);text-transform:uppercase;color:#fff;margin:16px 0 16px;letter-spacing:-.01em}
+.rx-h .g{color:var(--gd2)}
+.rx-p{font-size:16px;line-height:1.65;color:#a9a9a9;max-width:440px}
+.rx-p b{color:#fff}
+.rx-meta{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.rx-meta span{padding:9px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.1);font-size:12px;color:#9a9a9a}
+.rx-meta b{color:var(--gd2);font-weight:800;margin-right:4px}
+.rx-vid{position:relative;aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#0b0b0b;border:1px solid rgba(217,169,0,.35);box-shadow:0 30px 70px rgba(0,0,0,.55);cursor:pointer}
+.rx-poster{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .8s var(--ease),filter .5s}
+.rx-vid:hover .rx-poster{transform:scale(1.04);filter:brightness(.85)}
+.rx-vid::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.25),transparent 35%,transparent 60%,rgba(0,0,0,.65));pointer-events:none}
+.rx-badge{position:absolute;top:14px;left:14px;z-index:2;display:inline-flex;align-items:center;gap:7px;padding:6px 11px;border-radius:999px;background:rgba(10,10,10,.7);backdrop-filter:blur(6px);font:800 10px var(--tx);letter-spacing:.2em;color:#fff}
+.rx-badge i{width:7px;height:7px;border-radius:50%;background:#ff3b3b;box-shadow:0 0 8px #ff3b3b}
+.rx-play{position:absolute;left:50%;top:50%;z-index:2;width:72px;height:72px;margin:-36px 0 0 -36px;border-radius:50%;display:grid;place-items:center;background:var(--gd);box-shadow:0 0 0 10px rgba(217,169,0,.18),0 14px 40px rgba(0,0,0,.5);transition:transform .35s var(--ease)}
+.rx-play svg{width:28px;height:28px;fill:#0a0a0a;margin-left:4px}
+.rx-vid:hover .rx-play{transform:scale(1.08)}
+.rx-cap{position:absolute;left:16px;bottom:14px;z-index:2;font:600 12px var(--tx);color:#e6e6e6}
+.rx-vid.on .rx-poster,.rx-vid.on .rx-play,.rx-vid.on .rx-badge,.rx-vid.on .rx-cap,.rx-vid.on::after{display:none}
+.rx-vid iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:3}
+.rx-x{position:absolute;top:10px;right:10px;z-index:4;width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:rgba(10,10,10,.75);color:#fff;cursor:pointer;display:none}
+.rx-vid.on .rx-x{display:block}
+@media (max-width:860px){.rx{padding:20px 0 50px}.rx-wrap{grid-template-columns:1fr;padding:22px 18px;gap:22px;width:calc(100% - 32px)}.rx-p{font-size:14px}.rx-play{width:58px;height:58px;margin:-29px 0 0 -29px}.rx-play svg{width:22px;height:22px}}
 </style>
 </head>
 <body>
@@ -2787,6 +2815,24 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
     </div>
     <div class="cards" id="cards"></div>
     <div class="cbar"><i id="cbar"></i></div>
+  </div>
+</section>
+
+<!-- RETROSPECTIVA: REACT -->
+<section class="rx" id="react">
+  <div class="rx-wrap">
+    <div class="rx-txt rv">
+      <span class="kick"><i class="rx-live"></i>Retrospectiva · React</span>
+      <h2 class="rx-h">Quando a edição<br><span class="g">chega longe.</span></h2>
+      <p class="rx-p"><b>Super Xandão</b>, streamer com mais de 1 milhão de seguidores, reagiu a uma edição minha ao vivo.</p>
+      <div class="rx-meta"><span><b>+1 MI</b> seguidores</span><span><b>30s</b> de react</span></div>
+    </div>
+    <div class="rx-vid rv" id="rxVid" role="button" tabindex="0" aria-label="Assistir react do Super Xandão">
+      <img class="rx-poster" src="https://i.ytimg.com/vi/1EIqHZu0JJE/maxresdefault.jpg" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.src='https://i.ytimg.com/vi/1EIqHZu0JJE/hqdefault.jpg'">
+      <span class="rx-badge"><i></i>REACT</span>
+      <span class="rx-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg></span>
+      <span class="rx-cap">Super Xandão reage · 1:46 – 2:16</span>
+    </div>
   </div>
 </section>
 
@@ -3859,7 +3905,7 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
     nav.classList.remove("hide");   // menu sempre visível
     if (Math.abs(y - lastY) > 6 || y < 120) lastY = y;
     /* cada seção acende o botão certo; "Sobre" e "Parceiros" não acendem nenhum */
-    const MAP = [["inicio","inicio"],["youtube","trabalhos"],["trabalhos","trabalhos"],["design","design"],["acesso","acesso"],["stats","acesso"],["sobre",""],["depoimentos",""],["contato","contato"]];
+    const MAP = [["inicio","inicio"],["youtube","trabalhos"],["trabalhos","trabalhos"],["react","trabalhos"],["design","design"],["acesso","acesso"],["stats","acesso"],["sobre",""],["depoimentos",""],["contato","contato"]];
     let cur = "inicio";
     MAP.forEach(([id, btn]) => { const el = document.getElementById(id); if (el && el.getBoundingClientRect().top < innerHeight * .45) cur = btn; });
     if (atEnd) cur = "contato";
@@ -4242,6 +4288,10 @@ route();
 "Enviar":["Send","Enviar"],"Categorias de download":["Download categories","Categorías de descarga"],"Buscar download...":["Search downloads...","Buscar descarga..."],"Buscar download":["Search downloads","Buscar descarga"],
 "Comparar esboço e flyer pronta":["Compare sketch and finished flyer","Comparar boceto y flyer terminado"],"Prévia do download":["Download preview","Vista previa de la descarga"],"Fechar":["Close","Cerrar"],"Arte":["Artwork","Arte"],"Vídeo":["Video","Video"],
 "Idioma":["Language","Idioma"],
+"Retrospectiva · React":["Highlights · React","Retrospectiva · React"],"Quando a edição":["When the edit","Cuando la edición"],"chega longe.":["goes far.","llega lejos."],
+", streamer com mais de 1 milhão de seguidores, reagiu a uma edição minha ao vivo.":[", a streamer with over 1 million followers, reacted to one of my edits live.",", streamer con más de 1 millón de seguidores, reaccionó a una de mis ediciones en vivo."],
+"de react":["of react","de react"],"Super Xandão reage · 1:46 – 2:16":["Super Xandão reacts · 1:46 – 2:16","Super Xandão reacciona · 1:46 – 2:16"],
+"Assistir react do Super Xandão":["Watch Super Xandão's react","Ver el react de Super Xandão"],"Fechar vídeo":["Close video","Cerrar video"],
 "CÓDIGO CORRETO — FAÇA LOGIN":["CORRECT CODE — PLEASE SIGN IN","CÓDIGO CORRECTO — INICIA SESIÓN"],"CARREGANDO LOGIN...":["LOADING SIGN-IN...","CARGANDO INICIO DE SESIÓN..."],"SEM CONEXÃO — TENTE NOVAMENTE":["NO CONNECTION — TRY AGAIN","SIN CONEXIÓN — INTÉNTALO DE NUEVO"],
 "Conectando…":["Connecting…","Conectando…"],"Código correto · ASCOM":["Correct code · ASCOM","Código correcto · ASCOM"],"Entre para continuar":["Sign in to continue","Inicia sesión para continuar"],
 "Faça login com sua conta Google para pedir acesso ao material de apoio.":["Sign in with your Google account to request access to the support material.","Inicia sesión con tu cuenta de Google para solicitar acceso al material de apoyo."],
@@ -4326,6 +4376,38 @@ route();
   apply();
   mo.observe(document.body, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ATTRS });
   window.devoeLang = () => lang;
+})();
+
+/* ---------- retrospectiva: react do Super Xandão (trecho 1:46–2:16) ---------- */
+(function(){
+  const box = $("#rxVid"); if (!box) return;
+  const ID = "1EIqHZu0JJE", START = 106, END = 136;
+  let ifr = null;
+  const stop = () => { if (!ifr) return; ifr.remove(); ifr = null; box.classList.remove("on"); const x = box.querySelector(".rx-x"); x && x.remove(); window.devoeDuck && window.devoeDuck("rx", false); };
+  const play = () => {
+    if (ifr) return;
+    if (!/^https?:$/.test(location.protocol)) { window.open(`https://youtu.be/${ID}?t=${START}`, "_blank"); return; }
+    ifr = document.createElement("iframe");
+    ifr.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen"; ifr.allowFullscreen = true; ifr.title = "React do Super Xandão";
+    ifr.src = `https://www.youtube.com/embed/${ID}?start=${START}&end=${END}&autoplay=1&rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin=${encodeURIComponent(location.origin)}`;
+    box.appendChild(ifr); box.classList.add("on");
+    box.insertAdjacentHTML("beforeend", `<button class="rx-x" aria-label="Fechar vídeo">✕</button>`);
+    box.querySelector(".rx-x").addEventListener("click", e => { e.stopPropagation(); stop(); });
+    window.devoeDuck && window.devoeDuck("rx", true);            // música de fundo some enquanto o react toca
+    const listen = () => { try { ifr.contentWindow.postMessage(JSON.stringify({ event: "listening", id: "rx", channel: "widget" }), "*"); } catch (_) {} };
+    ifr.addEventListener("load", () => { listen(); setTimeout(listen, 800); });
+  };
+  addEventListener("message", ev => {
+    if (!ifr || ev.source !== ifr.contentWindow) return;
+    let d = ev.data; try { if (typeof d === "string") d = JSON.parse(d); } catch (_) { return; }
+    const st = d && (d.event === "onStateChange" ? d.info : d.info && d.info.playerState);
+    if (st === 1) window.devoeDuck && window.devoeDuck("rx", true);
+    if (st === 2 || st === 0) window.devoeDuck && window.devoeDuck("rx", false);
+  });
+  box.addEventListener("click", play);
+  box.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); play(); } });
+  /* sai da tela: para o vídeo */
+  new IntersectionObserver(es => es.forEach(en => { if (!en.isIntersecting) stop(); }), { threshold: 0 }).observe(box);
 })();
 </script>
 <script type="module">
