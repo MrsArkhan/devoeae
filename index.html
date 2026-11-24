@@ -3162,15 +3162,20 @@ function mountCover(el, idx){
 }
 /* TikTok no celular: se o player não responder, troca para o embed clássico e oferece abrir no app */
 const TT_READY = new WeakSet();
+const TT_TOUCH = matchMedia("(hover: none), (pointer: coarse)").matches;
+const ttEmbed = id => `https://www.tiktok.com/embed/v2/${id}?lang=pt-BR`;
 addEventListener("message", ev => { if (!/tiktok\.com$/.test((ev.origin || "").replace(/^https?:\/\//, ""))) return;
+  let d = ev.data; try { if (typeof d === "string") d = JSON.parse(d); } catch (_) {}
+  if (!d || (d.type !== "onPlayerReady" && d.type !== "onStateChange")) return;      // só conta como carregado com o player pronto de verdade
   document.querySelectorAll('iframe[data-tt]').forEach(f => { if (f.contentWindow === ev.source) TT_READY.add(f); }); });
 function ttWatch(box, id){
   const f = box.querySelector("iframe"); if (!f) return;
   f.dataset.tt = id;
+  if (TT_TOUCH) box.classList.add("ttfb");       // celular: embed clássico direto
   if (!box.querySelector(".ttapp")) box.insertAdjacentHTML("beforeend", `<a class="ttapp" href="${ttUrl(id)}" target="_blank" rel="noopener">Abrir no TikTok ↗</a>`);
   setTimeout(() => {
     if (!f.isConnected || TT_READY.has(f)) return;
-    if (f.src.includes("/player/v1/")) { f.src = `https://www.tiktok.com/embed/v2/${id}?lang=pt-BR`; box.classList.add("ttfb"); }
+    if (f.src.includes("/player/v1/")) { f.src = ttEmbed(id); box.classList.add("ttfb"); }
   }, 5000);
 }
 function playInline(el){
@@ -3181,7 +3186,7 @@ function playInline(el){
   el.classList.add("playing");
   el.closest(".card")?.classList.add("on");
   el.removeAttribute("role"); el.removeAttribute("tabindex");
-  el.innerHTML = `<iframe src="${playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="${esc(e.title)}"></iframe>
+  el.innerHTML = `<iframe src="${TT_TOUCH ? ttEmbed(e.id) : playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="${esc(e.title)}"></iframe>
     <button class="stop" aria-label="Parar vídeo">✕</button>`;
   el.querySelector(".stop").addEventListener("click", ev => { ev.stopPropagation(); stopCurrent(); });
   ttWatch(el, e.id);
@@ -3198,7 +3203,7 @@ function bindFrame(el, idx){
 function openModal(idx){
   stopCurrent();
   const e = CONFIG.edits[idx];
-  $("#mbox").innerHTML = `<iframe src="${playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="${esc(e.title)}"></iframe>`;
+  $("#mbox").innerHTML = `<iframe src="${TT_TOUCH ? ttEmbed(e.id) : playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="${esc(e.title)}"></iframe>`;
   ttWatch($("#mbox"), e.id);
   $("#mgo").href = ttUrl(e.id);
   $("#modal").classList.add("on");
