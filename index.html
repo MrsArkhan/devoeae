@@ -2545,6 +2545,13 @@ body.reel-mini #youtube{z-index:60!important}
 /* vídeo local no celular */
 .vf video.lv,#mbox video.lv{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:3;border:0}
 #mbox video.lv{position:relative;display:block;max-height:80vh}
+
+/* fundo desfocado dos vídeos locais (celular) */
+canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter:blur(18px) brightness(.5) saturate(1.2);transform:translateZ(0);pointer-events:none}
+.vf video.lv,#mbox video.lv{background:transparent!important}
+.vf.playing{overflow:hidden}
+#mbox{overflow:hidden}
+#mbox video.lv{z-index:3}
 </style>
 </head>
 <body>
@@ -3178,6 +3185,16 @@ function ttWatch(box, id){
   const v = box.querySelector("video.lv");
   if (v) {
     box.classList.add("ttfb");
+    /* fundo desfocado: o próprio vídeo, ampliado e borrado, no lugar das faixas pretas */
+    if (!box.querySelector("canvas.lvbg")) {
+      const c = document.createElement("canvas"); c.className = "lvbg"; c.width = 36; c.height = 64; c.setAttribute("aria-hidden", "true");
+      v.before(c); const g = c.getContext("2d");
+      const draw = () => { if (!v.isConnected) return; if (v.readyState >= 2) { try { g.drawImage(v, 0, 0, c.width, c.height); } catch (_) {} }
+        v.requestVideoFrameCallback ? v.requestVideoFrameCallback(draw) : requestAnimationFrame(draw); };
+      v.addEventListener("loadeddata", () => { try { g.drawImage(v, 0, 0, c.width, c.height); } catch (_) {} }, { once: true });
+      if (v.poster) { const im = new Image(); im.onload = () => { if (v.readyState < 2) g.drawImage(im, 0, 0, c.width, c.height); }; im.src = v.poster; }
+      draw();
+    }
     if (!box.querySelector(".ttapp")) box.insertAdjacentHTML("beforeend", `<a class="ttapp" href="${ttUrl(id)}" target="_blank" rel="noopener">Abrir no TikTok ↗</a>`);
     const duck = () => window.devoeDuck && window.devoeDuck("lv", !v.paused && !v.muted && v.isConnected);
     ["play", "pause", "ended", "volumechange"].forEach(t => v.addEventListener(t, duck));
