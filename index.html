@@ -4250,7 +4250,7 @@ route();
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, signInWithRedirect, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, setDoc, addDoc, collection, onSnapshot, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-const app = initializeApp({ apiKey: "AIzaSyD_wM8hkldpmiSVvnz-beT7r-1PUQ7hevA", authDomain: "devoe-469a6.firebaseapp.com", projectId: "devoe-469a6", storageBucket: "devoe-469a6.firebasestorage.app", messagingSenderId: "390681910799", appId: "1:390681910799:web:e08cfe8e3d592574368d7a" });
+const app = initializeApp({ apiKey: "AIzaSyD_wM8hkldpmiSVvnz-beT7r-1PUQ7hevA", authDomain: "devoe.com.br", projectId: "devoe-469a6", storageBucket: "devoe-469a6.firebasestorage.app", messagingSenderId: "390681910799", appId: "1:390681910799:web:e08cfe8e3d592574368d7a" });
 const auth = getAuth(app), db = getFirestore(app);
 const $ = s => document.querySelector(s), gate = $("#gate");
 let onOk = null, unsub = null, user = null, ready = false;
