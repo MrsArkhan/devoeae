@@ -2565,7 +2565,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .gturma.err button{border-color:rgba(255,77,77,.6);animation:shake .4s}
 
 /* ===== react do Super Xandão: mini-player flutuante (não ocupa espaço no site) ===== */
-.rxb{position:fixed;left:24px;bottom:72px;z-index:105;width:250px;transform:translateY(24px) scale(.96);opacity:0;pointer-events:none;transition:transform .55s cubic-bezier(.16,1,.3,1),opacity .4s}
+.rxb{position:fixed;right:24px;bottom:24px;z-index:105;width:300px;transform:translateY(24px) scale(.96);opacity:0;pointer-events:none;transition:transform .55s cubic-bezier(.16,1,.3,1),opacity .4s}
 .rxb.on{transform:none;opacity:1;pointer-events:auto}.rxb[hidden]{display:none}
 .rxb-card{position:relative;display:block;width:100%;aspect-ratio:16/9;padding:0;border:1px solid rgba(217,169,0,.55);border-radius:16px;overflow:hidden;background:#0b0b0b;cursor:pointer;box-shadow:0 18px 44px rgba(0,0,0,.6),0 0 30px rgba(217,169,0,.12)}
 .rxb-card video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .6s var(--ease)}
@@ -2578,7 +2578,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .rxb-txt small{display:block;font:500 10.5px var(--tx);color:#cfcfcf;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .rxb-pl{position:absolute;right:8px;bottom:8px;z-index:2;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:var(--gd)}
 .rxb-pl svg{width:13px;height:13px;fill:#0a0a0a;margin-left:2px}
-.rxb-x{position:absolute;top:-9px;right:-9px;z-index:3;width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:#151515;color:#bbb;font-size:10px;cursor:pointer}
+.rxb-x{position:absolute;top:-9px;left:-9px;z-index:3;width:24px;height:24px;border-radius:50%;border:1px solid rgba(255,255,255,.2);background:#151515;color:#bbb;font-size:10px;cursor:pointer}
 .rxm{position:fixed;inset:0;z-index:190;background:rgba(0,0,0,.88);backdrop-filter:blur(10px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .35s}
 .rxm.on{opacity:1}.rxm[hidden]{display:none}
 .rxm-box{width:min(960px,100%);border-radius:18px;overflow:hidden;background:#000;border:1px solid rgba(217,169,0,.4);box-shadow:0 40px 100px rgba(0,0,0,.7);transform:scale(.96);transition:transform .45s var(--ease)}
@@ -2588,7 +2588,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .rxm-cap i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff3b3b;margin-right:6px;vertical-align:middle}
 .rxm-cap b{color:#fff}
 .rxm-cap button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;color:#ddd;cursor:pointer;flex:0 0 auto}
-@media (max-width:760px){.rxb{left:12px;bottom:84px;width:190px}.rxb-txt small{display:none}.rxb-txt b{font-size:12px}.rxm{padding:10px}}
+@media (max-width:760px){.rxb{right:10px;bottom:78px;width:200px}.rxb-txt small{display:none}.rxb-txt b{font-size:12px}.rxm{padding:10px}}
 </style>
 </head>
 <body>
@@ -4038,8 +4038,7 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
   new IntersectionObserver(es => es.forEach(en => {
     if (!loaded) return;
     if (en.isIntersecting) { unmini(); if (!userPaused) cmd("playVideo"); }
-    else if (en.boundingClientRect.top < 0 && !closed && !$("#site").hidden) { fr.classList.add("mini"); document.body.classList.add("reel-mini"); if (!userPaused) cmd("playVideo"); }
-    else { unmini(); cmd("pauseVideo"); }
+    else { unmini(); cmd("pauseVideo"); }   // o vídeo do YouTube fica só no lugar dele
   }), { threshold: .25 }).observe(slot);
   addEventListener("hashchange", () => { if (location.hash === "#ascom") { unmini(); cmd("pauseVideo"); } });
 
@@ -4379,8 +4378,10 @@ route();
   const show = on => { if (closed || !m.hidden) on = false;
     if (on) { b.hidden = false; requestAnimationFrame(() => b.classList.add("on")); mini.play().catch(() => {}); }
     else { b.classList.remove("on"); mini.pause(); } };
-  const sec = document.getElementById("trabalhos");
-  if (sec) new IntersectionObserver(es => es.forEach(en => { inView = en.isIntersecting; show(inView && !(window.current)); }), { threshold: .35 }).observe(sec);
+  /* aparece depois que a pessoa passa dos Vídeos longos e some ao voltar para o topo */
+  const slot = document.getElementById("reelSlot");
+  if (slot) new IntersectionObserver(es => es.forEach(en => { inView = !en.isIntersecting && en.boundingClientRect.top < 0 && !$("#site").hidden; show(inView); }), { threshold: 0 }).observe(slot);
+  addEventListener("hashchange", () => { if (location.hash === "#ascom") { inView = false; show(false); } });
   const duck = () => window.devoeDuck && window.devoeDuck("rxv", !mv.paused && !m.hidden);
   ["play", "pause", "ended"].forEach(t => mv.addEventListener(t, duck));
   const open = () => { show(false); m.hidden = false; requestAnimationFrame(() => m.classList.add("on")); mv.currentTime = 0; mv.play().catch(() => {}); };
