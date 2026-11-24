@@ -2541,6 +2541,10 @@ body.reel-mini #youtube{z-index:60!important}
 .ttfb .ttapp{opacity:1;pointer-events:auto}
 @media (hover:none){.ttapp{opacity:.95;pointer-events:auto;bottom:auto;top:10px;left:10px;transform:none;padding:7px 12px;font-size:11px}}
 #mbox{position:relative}
+
+/* vídeo local no celular */
+.vf video.lv,#mbox video.lv{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;background:#000;z-index:3;border:0}
+#mbox video.lv{position:relative;display:block;max-height:80vh}
 </style>
 </head>
 <body>
@@ -3168,7 +3172,20 @@ addEventListener("message", ev => { if (!/tiktok\.com$/.test((ev.origin || "").r
   let d = ev.data; try { if (typeof d === "string") d = JSON.parse(d); } catch (_) {}
   if (!d || (d.type !== "onPlayerReady" && d.type !== "onStateChange")) return;      // só conta como carregado com o player pronto de verdade
   document.querySelectorAll('iframe[data-tt]').forEach(f => { if (f.contentWindow === ev.source) TT_READY.add(f); }); });
+/* celular: toca o arquivo hospedado no próprio site (o player do TikTok falha em muitos celulares) */
+const localVid = id => `<video class="lv" src="videos/edit-${id}.mp4" poster="videos/edit-${id}.jpg" controls playsinline autoplay preload="auto"></video>`;
 function ttWatch(box, id){
+  const v = box.querySelector("video.lv");
+  if (v) {
+    box.classList.add("ttfb");
+    if (!box.querySelector(".ttapp")) box.insertAdjacentHTML("beforeend", `<a class="ttapp" href="${ttUrl(id)}" target="_blank" rel="noopener">Abrir no TikTok ↗</a>`);
+    const duck = () => window.devoeDuck && window.devoeDuck("lv", !v.paused && !v.muted && v.isConnected);
+    ["play", "pause", "ended", "volumechange"].forEach(t => v.addEventListener(t, duck));
+    v.play().catch(() => { v.muted = true; v.play().catch(() => {}); });
+    const mo = new MutationObserver(() => { if (!v.isConnected) { window.devoeDuck && window.devoeDuck("lv", false); mo.disconnect(); } });
+    mo.observe(document.body, { childList: true, subtree: true });
+    return;
+  }
   const f = box.querySelector("iframe"); if (!f) return;
   f.dataset.tt = id;
   if (TT_TOUCH) box.classList.add("ttfb");       // celular: embed clássico direto
@@ -3186,7 +3203,7 @@ function playInline(el){
   el.classList.add("playing");
   el.closest(".card")?.classList.add("on");
   el.removeAttribute("role"); el.removeAttribute("tabindex");
-  el.innerHTML = `<iframe src="${TT_TOUCH ? ttEmbed(e.id) : playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="${esc(e.title)}"></iframe>
+  el.innerHTML = `${TT_TOUCH ? localVid(e.id) : `<iframe src="${playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media; picture-in-picture" allowfullscreen title="${esc(e.title)}"></iframe>`}
     <button class="stop" aria-label="Parar vídeo">✕</button>`;
   el.querySelector(".stop").addEventListener("click", ev => { ev.stopPropagation(); stopCurrent(); });
   ttWatch(el, e.id);
@@ -3203,7 +3220,7 @@ function bindFrame(el, idx){
 function openModal(idx){
   stopCurrent();
   const e = CONFIG.edits[idx];
-  $("#mbox").innerHTML = `<iframe src="${TT_TOUCH ? ttEmbed(e.id) : playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="${esc(e.title)}"></iframe>`;
+  $("#mbox").innerHTML = TT_TOUCH ? localVid(e.id) : `<iframe src="${playerUrl(e.id)}" allow="autoplay; fullscreen; encrypted-media" allowfullscreen title="${esc(e.title)}"></iframe>`;
   ttWatch($("#mbox"), e.id);
   $("#mgo").href = ttUrl(e.id);
   $("#modal").classList.add("on");
