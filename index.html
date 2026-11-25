@@ -2588,7 +2588,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .rxm-cap i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff3b3b;margin-right:6px;vertical-align:middle}
 .rxm-cap b{color:#fff}
 .rxm-cap button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;color:#ddd;cursor:pointer;flex:0 0 auto}
-@media (max-width:760px){.rxb{right:10px;bottom:78px;width:200px}.rxb-txt small{display:none}.rxb-txt b{font-size:12px}.rxm{padding:10px}}
+@media (max-width:760px){.rxb{right:10px;bottom:82px;width:168px}.rxb-txt small{display:none}.rxb-txt b{font-size:11px}.rxb-pl{width:26px;height:26px}.rxb-tag{font-size:8px;padding:3px 7px}.rxm{padding:10px}}
 
 /* prévia automática das edições (todas juntas) */
 .vf .apv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.5s cubic-bezier(.4,0,.2,1)}
@@ -3434,9 +3434,12 @@ function bindHover(el){
   const APV_OK = !matchMedia("(prefers-reduced-motion: reduce)").matches && !(navigator.connection && navigator.connection.saveData);
   /* início da melhor cena (o drop/flash das batidas). Toda vez que a prévia aparece ela recomeça daqui — nunca continua.
      Toca no máximo 6,5 s, longe da intro e da vinheta/partículas do final. */
-  const BEAT = { "7350078028938104069": 8.1, "7541621014271216902": 11.0, "7559176064979733816": 16.15, "7559603618534460683": 9.28,
-                 "7577945536188239111": 9.22, "7578516752187837703": 9.25, "7593681786358549768": 8.62, "7596885480956808469": 5.0 };
-  const SPAN = 6.5;
+  /* videos/cut-<id>.mp4 = recorte de 6,5 s da melhor cena (qualidade praticamente igual ao original).
+     Cada recorte é baixado inteiro antes de tocar (blob), então não trava nem dá "pulinho" esperando internet. */
+  const clips = {}, loading = {};
+  const fetchClip = id => { if (clips[id] || loading[id]) return;
+    loading[id] = fetch(`videos/cut-${id}.mp4`).then(r => { if (!r.ok) throw 0; return r.blob(); })
+      .then(b => { clips[id] = URL.createObjectURL(b); }).catch(() => { clips[id] = `videos/cut-${id}.mp4`; }); };
   const COVER_MS = 450;                // capa fica parada antes de começar a sumir
   const HOLD = 6200, BACK_MS = 1000;                  // tempo em cada posição do carrossel (com prévia)
   let secVis = false, lastGo = performance.now(), holdUntil = 0, covered = false;
@@ -3446,19 +3449,20 @@ function bindHover(el){
     let v = vf.querySelector(".apv"); if (v) return v;
     if (vf.classList.contains("playing")) return null;
     const idx = +vf.dataset.idx, e = CONFIG.edits[idx]; if (!e) return null;
-    const t0 = BEAT[e.id] || 0, t1 = t0 + SPAN;
+    if (!clips[e.id]) { fetchClip(e.id); return null; }     // ainda baixando: a capa fica até estar pronto
+    const t0 = 0;
     v = document.createElement("video");
     v.className = "apv"; v.muted = true; v.defaultMuted = true; v.playsInline = true;
     v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.preload = "auto"; v.disablePictureInPicture = true;
     v.ready = false; v.t0 = t0; v.showAt = Math.max(performance.now() + COVER_MS, holdUntil);
-    v.addEventListener("loadedmetadata", () => { v.currentTime = t0; }, { once: true });
+    v.addEventListener("loadeddata", () => { v.ready = true; }, { once: true });
     v.addEventListener("seeked", () => { v.ready = true; });
-    v.addEventListener("timeupdate", () => { if (v.currentTime >= t1) v.currentTime = t0; });
-    v.addEventListener("ended", () => { v.currentTime = t0; v.play().catch(() => {}); });
-    v.src = `videos/edit-${e.id}.mp4`;
+    v.addEventListener("ended", () => { v.currentTime = 0; v.play().catch(() => {}); });
+    v.src = clips[e.id];
     vf.prepend(v); return v;
   };
   const drop = v => { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); };
+  const prefetchAround = vis => vis.forEach(vf => { const i = +vf.dataset.idx; [i, (i + 1) % NE, (i - 1 + NE) % NE].forEach(k => CONFIG.edits[k] && fetchClip(CONFIG.edits[k].id)); });
   const rewind = v => { v.pause(); if (v.ready && Math.abs(v.currentTime - v.t0) > .05) { v.ready = false; v.currentTime = v.t0; } };
   const want = () => APV_OK && secVis && !document.hidden && !(current && box.contains(current.el));
   const tick = () => {
@@ -3466,15 +3470,20 @@ function bindHover(el){
       box.querySelectorAll(".apv").forEach(v => { if (v.classList.contains("on")) { v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto"); setTimeout(() => !v.classList.contains("on") && rewind(v), 950); } else if (!v.paused) rewind(v); });
       return; }
     const vis = visVfs(), now = performance.now();
+    prefetchAround(vis);
     box.querySelectorAll(".apv").forEach(v => { if (!vis.includes(v.parentElement)) drop(v); });   // saiu da tela: libera
-    vis.forEach(vf => {
-      const v = ensure(vf); if (!v || !v.ready || now < v.showAt || v.classList.contains("on")) return;
-      if (v.paused) { if (!v.starting) { v.starting = true; v.play().catch(() => {}).finally(() => v.starting = false); } return; }
+    vis.forEach((vf, k) => {
+      /* o vídeo começa ~0,3 s antes da capa sumir (ainda escondido) e um pouco escalonado entre os cards:
+         assim o decodificador já está rodando liso quando aparece — sem travadinha/pulinho */
+      const v = ensure(vf); if (!v || !v.ready || v.classList.contains("on")) return;
+      const at = v.showAt + k * 90;
+      if (v.paused) { if (now >= at - 320 && !v.starting) { v.starting = true; v.play().catch(() => {}).finally(() => v.starting = false); } return; }
+      if (now < at) return;
       v.classList.add("on"); vf.classList.add("auto");
     });
   };
   /* perto da seção: já carrega as edições visíveis para começar na hora */
-  new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && APV_OK && !secVis) visVfs().forEach(vf => { const v = ensure(vf); if (v) v.showAt = Math.max(v.showAt, performance.now() + 9e9); }); }), { rootMargin: "700px 0px" }).observe(box);
+  new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && APV_OK && !secVis) prefetchAround(visVfs()); }), { rootMargin: "900px 0px" }).observe(box);
   new IntersectionObserver(es => es.forEach(en => { secVis = en.isIntersecting;
     if (secVis) { lastGo = performance.now(); box.querySelectorAll(".apv").forEach(v => { if (!v.classList.contains("on")) v.showAt = performance.now() + COVER_MS; }); } }), { threshold: .3 }).observe(box);
   setInterval(() => {
@@ -4024,7 +4033,10 @@ $("#wgo").onclick = () => { $("#welcome").classList.remove("on"); location.hash 
       let left = 8000, started = Date.now();
       const arm = () => { started = Date.now(); tT = setTimeout(hideToast, left); };
       t.addEventListener("mouseenter", () => { clearTimeout(tT); left -= Date.now() - started; });
-      t.addEventListener("mouseleave", arm); arm(); };
+      t.addEventListener("mouseleave", arm); arm();
+      if (matchMedia("(max-width:760px)").matches) { const y0 = scrollY, shownAt = Date.now();
+        const onSc = () => { if (Date.now() - shownAt > 1200 && Math.abs(scrollY - y0) > 120) { hideToast(); removeEventListener("scroll", onSc); } };
+        addEventListener("scroll", onSc, { passive: true }); } };
     setTimeout(pop, 2500);
   }
   $("#vtX") && $("#vtX").addEventListener("click", e => { e.stopPropagation(); hideToast(); });
@@ -4448,7 +4460,11 @@ route();
     else { b.classList.remove("on"); mini.pause(); } };
   /* aparece depois que a pessoa passa dos Vídeos longos e some ao voltar para o topo */
   const slot = document.getElementById("reelSlot");
-  if (slot) new IntersectionObserver(es => es.forEach(en => { inView = !en.isIntersecting && en.boundingClientRect.top < 0 && !$("#site").hidden; show(inView); }), { threshold: 0 }).observe(slot);
+  const MOB = matchMedia("(max-width:760px)").matches;
+  if (MOB) {   /* celular: aparece só enquanto a pessoa está nas Edições em destaque (não cobre o resto do site) */
+    const ed = document.getElementById("trabalhos");
+    if (ed) new IntersectionObserver(es => es.forEach(en => { inView = en.isIntersecting && !$("#site").hidden; show(inView); }), { threshold: .45 }).observe(ed);
+  } else if (slot) new IntersectionObserver(es => es.forEach(en => { inView = !en.isIntersecting && en.boundingClientRect.top < 0 && !$("#site").hidden; show(inView); }), { threshold: 0 }).observe(slot);
   addEventListener("hashchange", () => { if (location.hash === "#ascom") { inView = false; show(false); } });
   const duck = () => window.devoeDuck && window.devoeDuck("rxv", !mv.paused && !m.hidden);
   ["play", "pause", "ended"].forEach(t => mv.addEventListener(t, duck));
