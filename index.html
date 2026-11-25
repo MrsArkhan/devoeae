@@ -2594,6 +2594,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .vf .apv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.5s cubic-bezier(.4,0,.2,1)}
 .vf .apv.fast{transition-duration:.35s}
 .vf .apv:not(.on){transition-duration:.9s}
+.vf .apv.quick:not(.on){transition-duration:.35s}
 .vf .apv.on{opacity:1}
 .vf.auto .pbtn{opacity:.55;transform:scale(.85)}
 .vf.auto:hover .pbtn{opacity:1;transform:none}
@@ -3423,8 +3424,9 @@ function bindHover(el){
     const d = Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : (ev.shiftKey ? ev.deltaY : 0);
     if (Math.abs(d) > 2) { dir = d > 0 ? 1 : -1; lastUser = performance.now(); }
   }, { passive: true });
-  $("#cPrev").onclick = () => { dir = -1; lastUser = performance.now(); go(-1); };
-  $("#cNext").onclick = () => { dir = 1; lastUser = performance.now(); go(1); };
+  let arrowGo = d => go(d);          // substituído mais abaixo pela versão com capas (prévia automática)
+  $("#cPrev").onclick = () => { dir = -1; lastUser = performance.now(); arrowGo(-1); };
+  $("#cNext").onclick = () => { dir = 1; lastUser = performance.now(); arrowGo(1); };
   const init = () => { jump(setW()); upd(); };
   addEventListener("resize", init); requestAnimationFrame(init); setTimeout(init, 400);
   let paused = false;
@@ -3470,6 +3472,18 @@ function bindHover(el){
   if (APV_OK) addEventListener("load", () => setTimeout(() => CONFIG.edits.slice(0, innerWidth < 760 ? 3 : 5).forEach(e => fetchClip(e.id)), 1200), { once: true });
   const prefetchAround = vis => vis.forEach(vf => { const i = +vf.dataset.idx; [i, (i + 1) % NE, (i - 1 + NE) % NE].forEach(k => CONFIG.edits[k] && fetchClip(CONFIG.edits[k].id)); });
   const rewind = v => { v.pause(); if (v.ready && Math.abs(v.currentTime - v.t0) > .05) { v.ready = false; v.currentTime = v.t0; } };
+  /* setas: as capas voltam rapidinho, o carrossel anda e depois a prévia volta (igual ao automático) */
+  let arrowT;
+  arrowGo = d => {
+    if (!APV_OK) return go(d);
+    const now = performance.now(), on = [...box.querySelectorAll(".apv.on")];
+    covered = false; lastGo = now;
+    holdUntil = now + (on.length ? 380 : 0) + 650 + COVER_MS;
+    box.querySelectorAll(".apv").forEach(v => { v.showAt = holdUntil;
+      if (v.classList.contains("on")) { v.classList.add("quick"); v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto");
+        setTimeout(() => { v.classList.remove("quick"); if (!v.classList.contains("on")) rewind(v); }, 450); } });
+    clearTimeout(arrowT); arrowT = setTimeout(() => go(d), on.length ? 380 : 0);
+  };
   const want = () => APV_OK && secVis && !document.hidden && !(current && box.contains(current.el));
   const tick = () => {
     if (!want()) { box.querySelectorAll(".vf.auto").forEach(vf => vf.classList.remove("auto"));
