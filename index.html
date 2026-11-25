@@ -2590,12 +2590,11 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .rxm-cap button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;color:#ddd;cursor:pointer;flex:0 0 auto}
 @media (max-width:760px){.rxb{right:10px;bottom:78px;width:200px}.rxb-txt small{display:none}.rxb-txt b{font-size:12px}.rxm{padding:10px}}
 
-/* prévia automática das edições (uma por vez) */
-.vf .apv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;opacity:0;transition:opacity .45s ease}
+/* prévia automática das edições (todas juntas) */
+.vf .apv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;opacity:0;transition:opacity .5s ease}
 .vf .apv.on{opacity:1}
-.vf.auto .ptag{opacity:1;transform:none}
-.vf.auto .pline{animation:pl 10s linear forwards}
-.vf.auto .pbtn{opacity:0;transform:scale(.7)}
+.vf.auto .pbtn{opacity:.55;transform:scale(.85)}
+.vf.auto:hover .pbtn{opacity:1;transform:none}
 </style>
 </head>
 <body>
@@ -3365,7 +3364,7 @@ function bindHover(el){
     if (el.classList.contains("playing")) return;
     el.classList.add("hov");
     t1 = setTimeout(() => {               // prévia real do TikTok, sem som
-      if (!el.classList.contains("hov")) return;
+      if (!el.classList.contains("hov") || el.classList.contains("auto")) return;
       const e = CONFIG.edits[+el.dataset.idx];
       const f = document.createElement("iframe");
       f.className = "pvw"; f.tabIndex = -1; f.title = "Prévia"; f.allow = "autoplay";
@@ -3428,58 +3427,60 @@ function bindHover(el){
   box.addEventListener("touchstart", () => { paused = true; clearTimeout(tRes); }, { passive: true });
   const resume = () => { clearTimeout(tRes); tRes = setTimeout(() => { paused = false; lastUser = performance.now(); }, 800); };
   box.addEventListener("touchend", resume, { passive: true }); box.addEventListener("touchcancel", resume, { passive: true });
-  /* prévia automática: uma edição por vez toca a parte das batidas (sem som), na qualidade original,
-     já carregada antes (começa na hora) e passa direto para a próxima */
+  /* prévia automática: ao chegar na seção, TODAS as edições visíveis tocam juntas (sem som, na qualidade original,
+     na parte das batidas). Quando o carrossel desliza, as capas voltam suavemente e depois a prévia volta. */
   const APV_OK = !matchMedia("(prefers-reduced-motion: reduce)").matches && !(navigator.connection && navigator.connection.saveData);
   const BEAT = { "7350078028938104069": 8.58, "7541621014271216902": 11.2, "7559176064979733816": 15.24, "7559603618534460683": 15.52,
                  "7577945536188239111": 9.41, "7578516752187837703": 9.0, "7593681786358549768": 6.7, "7596885480956808469": 4.28 };
-  const DUR = 10;                     // segundos de cada edição
-  let apv = null, busyUntil = 0, lastIdx = null, pre = null;
-  const mkVid = idx => {              // vídeo original, já posicionado na parte das batidas
-    const e = CONFIG.edits[idx], t0 = BEAT[e.id] || 0, v = document.createElement("video");
-    v.className = "apv"; v.muted = true; v.defaultMuted = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("muted", "");
-    v.preload = "auto"; v.disablePictureInPicture = true; v.dataset.idx = idx; v.t0 = t0; v.ready = false;
+  const DUR = 10, HOLD = 7000;        // trecho em loop (s) · tempo parado em cada posição (ms)
+  let secVis = false, near = false, moving = false, tMove, lastGo = performance.now();
+  const visVfs = () => { const r = box.getBoundingClientRect();
+    return [...box.querySelectorAll(".card .vf")].filter(v => { const b = v.getBoundingClientRect(); return b.right > r.left + 24 && b.left < r.right - 24; }); };
+  const ensure = vf => {
+    let v = vf.querySelector(".apv"); if (v) return v;
+    if (vf.classList.contains("playing")) return null;
+    const e = CONFIG.edits[+vf.dataset.idx]; if (!e) return null;
+    const t0 = BEAT[e.id] || 0;
+    v = document.createElement("video");
+    v.className = "apv"; v.muted = true; v.defaultMuted = true; v.playsInline = true; v.loop = false;
+    v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.preload = "auto"; v.disablePictureInPicture = true;
+    v.t0 = t0; v.ready = false;
     v.addEventListener("loadedmetadata", () => { v.currentTime = t0; }, { once: true });
-    v.addEventListener("seeked", () => { v.ready = true; }, { once: true });
-    v.src = `videos/edit-${e.id}.mp4`; v.load();
-    return v;
+    v.addEventListener("seeked", () => { v.ready = true; });
+    v.addEventListener("timeupdate", () => { if (v.currentTime >= t0 + DUR) v.currentTime = t0; });   // trecho das batidas em loop
+    v.addEventListener("ended", () => { v.currentTime = t0; v.play().catch(() => {}); });
+    v.src = `videos/edit-${e.id}.mp4`;
+    vf.prepend(v); return v;
   };
-  const shelf = document.createElement("div"); shelf.style.cssText = "position:absolute;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none;left:-9px;top:0";
-  document.body.appendChild(shelf);
-  const preload = idx => { if (!APV_OK) return; if (pre && +pre.dataset.idx === idx) return; if (pre) pre.remove(); pre = mkVid(idx); shelf.appendChild(pre); };
-  const nextIdx = () => lastIdx == null ? null : (lastIdx + dir + NE) % NE;
-  const centerCard = want => { const r = box.getBoundingClientRect(), cx = r.left + r.width / 2; let best = null, bd = 1e9;
-    box.querySelectorAll(".card .vf").forEach(v => { const b = v.getBoundingClientRect(); if (b.left < r.left - 4 || b.right > r.right + 4) return;
-      if (want != null && +v.dataset.idx !== want) return;
-      const d = Math.abs(b.left + b.width / 2 - cx); if (d < bd) { bd = d; best = v; } }); return best; };
-  const stopApv = (advance) => { if (!apv) return; const { el, v } = apv; apv = null; el.classList.remove("auto"); v.classList.remove("on");
-    setTimeout(() => { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); }, 700);
-    if (advance) { go(dir); busyUntil = performance.now() + 820; } else busyUntil = Math.max(busyUntil, performance.now() + 1200); };
-  const startApv = el => {
-    if (el.classList.contains("playing") || el.classList.contains("hov")) return false;
-    const idx = +el.dataset.idx;
-    const v = (pre && +pre.dataset.idx === idx) ? pre : mkVid(idx); if (v === pre) pre = null;
-    el.prepend(v); apv = { el, v, t: performance.now() };
-    const show = () => { if (apv && apv.v === v) { v.classList.add("on"); el.classList.add("auto"); } };
-    const go2 = () => { v.play().then(show).catch(() => { if (apv && apv.v === v) stopApv(false); }); };
-    if (v.ready) go2(); else v.addEventListener("seeked", go2, { once: true });
-    v.addEventListener("timeupdate", () => { if (apv && apv.v === v && (v.currentTime >= v.t0 + DUR || v.ended)) stopApv(true); });
-    v.addEventListener("ended", () => { if (apv && apv.v === v) stopApv(true); });
-    v.addEventListener("error", () => { if (apv && apv.v === v) stopApv(false); });
-    lastIdx = idx; preload(nextIdx());          // já deixa a próxima carregando
-    return true;
+  const want = () => APV_OK && secVis && !moving && !document.hidden && !(current && box.contains(current.el));
+  const show = () => {
+    const vis = visVfs();
+    box.querySelectorAll(".apv").forEach(v => { if (!vis.includes(v.parentElement)) { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); } });  // libera os que saíram
+    vis.forEach(vf => {
+      const v = ensure(vf); if (!v || v.wait || (v.classList.contains("on") && !v.paused)) return;
+      const go2 = () => { v.wait = false; if (!want()) return;
+        v.play().then(() => { if (want()) { v.classList.add("on"); vf.classList.add("auto"); } }).catch(() => {}); };
+      if (v.ready) go2(); else { v.wait = true; v.addEventListener("seeked", go2, { once: true }); }
+    });
   };
-  /* quando a seção chega perto da tela, a primeira edição já começa a carregar */
-  new IntersectionObserver(es => es.forEach(en => { if (en.isIntersecting && !pre && !apv) { const c = centerCard(); if (c) preload(+c.dataset.idx); } }), { rootMargin: "600px 0px" }).observe(box);
+  const hide = () => {
+    box.querySelectorAll(".vf.auto").forEach(vf => vf.classList.remove("auto"));
+    box.querySelectorAll(".apv.on").forEach(v => { v.classList.remove("on"); setTimeout(() => { if (!v.classList.contains("on")) v.pause(); }, 600); });
+  };
+  /* deslizou (sozinho ou pelo usuário): capas voltam; parou: prévia volta */
+  box.addEventListener("scroll", () => { if (!APV_OK) return; if (!moving) { moving = true; hide(); }
+    clearTimeout(tMove); tMove = setTimeout(() => { moving = false; if (want()) show(); }, 520); }, { passive: true });
+  /* chegando perto da seção: já carrega as edições visíveis para começar na hora */
+  new IntersectionObserver(es => es.forEach(en => { near = en.isIntersecting; if (near && APV_OK) visVfs().forEach(ensure); }), { rootMargin: "700px 0px" }).observe(box);
+  new IntersectionObserver(es => es.forEach(en => { secVis = en.isIntersecting; if (secVis) { lastGo = performance.now(); show(); } else hide(); }), { threshold: .3 }).observe(box);
   setInterval(() => {
     const r = box.getBoundingClientRect(), now = performance.now();
-    if (paused || (current && box.contains(current.el)) || document.hidden || r.top > innerHeight || r.bottom < 0 || now - lastUser < 1800) { stopApv(false); return; }
-    if (apv) { if (now - apv.t > (DUR + 6) * 1000) stopApv(true); return; }
-    if (now < busyUntil) return;
-    if (!APV_OK) { go(dir); busyUntil = now + 2200; return; }
-    const el = (lastIdx != null && centerCard(nextIdx())) || centerCard();
-    if (!(el && startApv(el))) { go(dir); busyUntil = now + 1500; }
-  }, 120);
+    if (APV_OK) { if (want()) show(); else if (!moving) hide(); }
+    if (paused || (current && box.contains(current.el)) || document.hidden || r.top > innerHeight || r.bottom < 0) { lastGo = Math.max(lastGo, now - HOLD + 2500); return; }
+    if (now - lastUser < 1800) { lastGo = now; return; }
+    if (now - lastGo < (APV_OK ? HOLD : 2200)) return;
+    lastGo = now; go(dir);
+  }, 300);
 })();
 
 /* ---------- DESIGN BOOK (mosaico das últimas artes) ---------- */
