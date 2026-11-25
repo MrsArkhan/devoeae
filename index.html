@@ -3609,7 +3609,8 @@ $("#stats").innerHTML = CONFIG.stats.map(s => `<div class="st"><svg viewBox="0 0
       b.dataset.n = val;
       if (b.textContent !== "0" && !/^\D*0(\.0)?\D*$/.test(b.textContent)) b.textContent = (b.dataset.p || "") + val.toFixed(String(val).includes(".") ? 1 : 0) + (b.dataset.s || ""); };
     const r1 = (n, d) => Math.round(n / d * 10) / 10;
-    if (d.ytViews) put("eye", r1((CONFIG.ttViews || 0) + d.ytViews, 1e6));
+    const ttv = d.ttViews > 0 ? d.ttViews : (CONFIG.ttViews || 0);           // TikTok ao vivo (API oficial) ou o número fixo
+    if (d.ytViews || d.ttViews) put("eye", r1(ttv + (d.ytViews || 0), 1e6));
     if (d.ttFollowers) { put("users", r1(d.ttFollowers, 1e3)); const s = document.querySelector(".ttb small"); if (s) s.textContent = r1(d.ttFollowers, 1e3) + "K"; }
     if (d.ytSubs) { put("play", r1(d.ytSubs, 1e3)); const s = document.querySelector(".ytb small"); if (s) s.textContent = r1(d.ytSubs, 1e3) + "K"; }
   }).catch(() => {});

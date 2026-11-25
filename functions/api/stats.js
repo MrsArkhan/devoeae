@@ -1,5 +1,6 @@
 // Números ao vivo para o site: seguidores/curtidas do TikTok e inscritos/visualizações do YouTube.
 // Sem senha nem chave: lê as páginas públicas (embed do TikTok e "Sobre" do canal). Cache de 15 min.
+import { ttOfficial } from "../_tt.js";
 const TT = "devoe.ae", YT = "@devoeae";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36";
 const num = t => { if (!t) return null; const m = String(t).replace(/,/g, "").match(/([\d.]+)\s*([KMB])?/i); if (!m) return null;
@@ -23,10 +24,14 @@ async function youtube() {
 }
 
 export async function onRequestGet(ctx) {
-  const cache = caches.default, key = new Request(new URL("/api/stats?v=1", ctx.request.url).toString());
+  const cache = caches.default, key = new Request(new URL("/api/stats?v=2", ctx.request.url).toString());
   const hit = await cache.match(key); if (hit) return hit;
-  const [a, b] = await Promise.allSettled([tiktok(), youtube()]);
+  const [a, b, c] = await Promise.allSettled([tiktok(), youtube(), ttOfficial(ctx.env).catch(() => null)]);
+  const off = c.value || {};
   const data = { ...(a.value || {}), ...(b.value || {}), at: Date.now() };
+  if (off.ttViews) { data.ttViews = off.ttViews; data.ttViewsSource = "api"; }          // total real de todos os vídeos
+  if (off.ttFollowers) data.ttFollowers = off.ttFollowers;
+  if (off.ttLikes) data.ttLikes = off.ttLikes;
   const ok = !!(data.ttFollowers || data.ytSubs || data.ytViews);
   const res = new Response(JSON.stringify({ ok, ...data }), { headers: { "content-type": "application/json; charset=utf-8",
     "cache-control": ok ? "public, max-age=900" : "public, max-age=60", "access-control-allow-origin": "*" } });
