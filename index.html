@@ -2589,6 +2589,13 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .rxm-cap b{color:#fff}
 .rxm-cap button{width:30px;height:30px;border-radius:50%;border:1px solid rgba(255,255,255,.15);background:transparent;color:#ddd;cursor:pointer;flex:0 0 auto}
 @media (max-width:760px){.rxb{right:10px;bottom:78px;width:200px}.rxb-txt small{display:none}.rxb-txt b{font-size:12px}.rxm{padding:10px}}
+
+/* prévia automática das edições (uma por vez) */
+.vf .apv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;opacity:0;transform:scale(1.05);transition:opacity .9s ease,transform 5.5s cubic-bezier(.22,1,.36,1)}
+.vf .apv.on{opacity:1;transform:scale(1)}
+.vf.auto .ptag{opacity:1;transform:none}
+.vf.auto .pline{animation:pl 5.5s linear forwards}
+.vf.auto .pbtn{opacity:0;transform:scale(.7)}
 </style>
 </head>
 <body>
@@ -3421,12 +3428,39 @@ function bindHover(el){
   box.addEventListener("touchstart", () => { paused = true; clearTimeout(tRes); }, { passive: true });
   const resume = () => { clearTimeout(tRes); tRes = setTimeout(() => { paused = false; lastUser = performance.now(); }, 800); };
   box.addEventListener("touchend", resume, { passive: true }); box.addEventListener("touchcancel", resume, { passive: true });
+  /* prévia automática: uma edição por vez toca a parte das batidas (sem som), depois o carrossel anda */
+  const APV_OK = !matchMedia("(prefers-reduced-motion: reduce)").matches && !(navigator.connection && navigator.connection.saveData);
+  const GAP = 1500;
+  let apv = null, busyUntil = 0, phase = 0;
+  let lastIdx = null;   /* segue a ordem das edições: cada prévia é a próxima da fila */
+  const centerCard = want => { const r = box.getBoundingClientRect(), cx = r.left + r.width / 2; let best = null, bd = 1e9;
+    box.querySelectorAll(".card .vf").forEach(v => { const b = v.getBoundingClientRect(); if (b.left < r.left - 4 || b.right > r.right + 4) return;
+      if (want != null && +v.dataset.idx !== want) return;
+      const d = Math.abs(b.left + b.width / 2 - cx); if (d < bd) { bd = d; best = v; } }); return best; };
+  const stopApv = () => { if (!apv) return; const { el, v } = apv; apv = null; el.classList.remove("auto"); v.classList.remove("on");
+    setTimeout(() => v.remove(), 900); busyUntil = Math.max(busyUntil, performance.now() + GAP); };
+  const startApv = el => {
+    if (el.classList.contains("playing") || el.classList.contains("hov")) return false;
+    const e = CONFIG.edits[+el.dataset.idx]; if (!e) return false;
+    const v = document.createElement("video");
+    v.className = "apv"; v.muted = true; v.defaultMuted = true; v.playsInline = true; v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.preload = "auto";
+    v.src = `videos/prev-${e.id}.mp4`; el.prepend(v); apv = { el, v, t: performance.now() };
+    v.addEventListener("playing", () => { if (apv && apv.v === v) { v.classList.add("on"); el.classList.add("auto"); } }, { once: true });
+    v.addEventListener("ended", () => { if (apv && apv.v === v) stopApv(); });
+    v.addEventListener("error", () => { if (apv && apv.v === v) stopApv(); });
+    v.play().catch(() => { if (apv && apv.v === v) stopApv(); });
+    return true;
+  };
   setInterval(() => {
-    const r = box.getBoundingClientRect();
-    if (paused || (current && box.contains(current.el)) || document.hidden || r.top > innerHeight || r.bottom < 0) return;
-    if (performance.now() - lastUser < 1800) return;      // espera um pouco depois do deslize
-    go(dir);
-  }, 2200);
+    const r = box.getBoundingClientRect(), now = performance.now();
+    if (paused || (current && box.contains(current.el)) || document.hidden || r.top > innerHeight || r.bottom < 0 || now - lastUser < 1800) { stopApv(); return; }
+    if (apv) { if (now - apv.t > 9000) stopApv(); return; }
+    if (now < busyUntil) return;
+    if (phase === 0 || !APV_OK) { go(dir); phase = 1; busyUntil = now + (APV_OK ? 1150 : 2200); }
+    else { phase = 0;
+      const el = (lastIdx != null && centerCard((lastIdx + dir + NE) % NE)) || centerCard();
+      if (el && startApv(el)) lastIdx = +el.dataset.idx; else busyUntil = now + 1200; }
+  }, 200);
 })();
 
 /* ---------- DESIGN BOOK (mosaico das últimas artes) ---------- */
