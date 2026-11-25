@@ -3328,7 +3328,7 @@ $("#heroPlayBtn").onclick = () => openModal(0);
 /* ---------- CARDS ---------- */
 const NE = CONFIG.edits.length;
 $("#cards").innerHTML = [...CONFIG.edits, ...CONFIG.edits, ...CONFIG.edits].map((e, i) => `
-  <article class="card rv${i < NE || i >= NE * 2 ? " clone" : ""}" style="--d:${(i % NE) * .08}s">
+  <article class="card rv${i < NE || i >= NE * 2 ? " clone" : ""}" data-id="${e.id}" style="--d:${(i % NE) * .08}s">
     <div class="vf" data-c="PLAY"></div>
     <div class="cinfo">
       <div><h3 data-full="${esc(e.title)}"${e.short ? ` data-short="${esc(e.short)}"` : ""}>${esc(e.title)}</h3>${e.views ? `<p class="vw" aria-label="${esc(e.views)} visualizações"><svg viewBox="0 0 24 24"><path d="M8 5.5v13l10.5-6.5z"/></svg><b>${esc(e.views)}</b><span>views</span></p>` : `<p>${esc(e.sub)}</p>`}</div>
@@ -3611,6 +3611,10 @@ $("#stats").innerHTML = CONFIG.stats.map(s => `<div class="st"><svg viewBox="0 0
     const r1 = (n, d) => Math.round(n / d * 10) / 10;
     const ttv = d.ttViews > 0 ? d.ttViews : (CONFIG.ttViews || 0);           // TikTok ao vivo (API oficial) ou o número fixo
     if (d.ytViews || d.ttViews) put("eye", r1(ttv + (d.ytViews || 0), 1e6));
+    /* views de cada edição em destaque, ao vivo */
+    const fv = n => n >= 1e6 ? (Math.round(n / 1e5) / 10) + "M" : n >= 1e3 ? (Math.round(n / 100) / 10) + "K" : String(n);
+    if (d.edits) Object.entries(d.edits).forEach(([id, n]) => { if (!(n > 0)) return; const e = CONFIG.edits.find(x => x.id === id); if (e) e.views = fv(n);
+      document.querySelectorAll(`#cards .card[data-id="${id}"] .vw`).forEach(p => { p.querySelector("b").textContent = fv(n); p.setAttribute("aria-label", fv(n) + " visualizações"); }); });
     if (d.ttFollowers) { put("users", r1(d.ttFollowers, 1e3)); const s = document.querySelector(".ttb small"); if (s) s.textContent = r1(d.ttFollowers, 1e3) + "K"; }
     if (d.ytSubs) { put("play", r1(d.ytSubs, 1e3)); const s = document.querySelector(".ytb small"); if (s) s.textContent = r1(d.ytSubs, 1e3) + "K"; }
   }).catch(() => {});

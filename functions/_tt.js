@@ -1,6 +1,8 @@
 // Integração oficial TikTok (Login Kit + video.list) — usada por /api/tiktok-auth e /api/stats.
 // Precisa no Cloudflare Pages: variáveis TT_CLIENT_KEY e TT_CLIENT_SECRET + KV namespace ligado como TT_KV.
 export const REDIRECT = "https://devoe.com.br/api/tiktok-auth";
+/* edições em destaque do site: as views delas também vão ao vivo para os cards */
+const EDIT_IDS = ["7577945536188239111","7350078028938104069","7593681786358549768","7559176064979733816","7541621014271216902","7596885480956808469","7578516752187837703","7559603618534460683"];
 export const SCOPES = "user.info.basic,user.info.stats,video.list";
 
 async function tokenReq(env, body) {
@@ -30,15 +32,16 @@ export async function ttOfficial(env) {
   if (cached && Date.now() - cached.at < 3600e3) return cached;
   const H = { authorization: `Bearer ${t.access_token}`, "content-type": "application/json" };
   const u = await (await fetch("https://open.tiktokapis.com/v2/user/info/?fields=follower_count,likes_count,video_count", { headers: H })).json();
+  const byId = {};
   let views = 0, n = 0, cursor = undefined, more = true, pages = 0;
   while (more && pages < 80) {
     const r = await (await fetch("https://open.tiktokapis.com/v2/video/list/?fields=id,view_count", { method: "POST", headers: H,
       body: JSON.stringify(cursor ? { max_count: 20, cursor } : { max_count: 20 }) })).json();
-    const d = r.data || {}; (d.videos || []).forEach(v => { views += +v.view_count || 0; n++; });
+    const d = r.data || {}; (d.videos || []).forEach(v => { views += +v.view_count || 0; n++; if (EDIT_IDS.includes(String(v.id))) byId[String(v.id)] = +v.view_count || 0; });
     more = !!d.has_more; cursor = d.cursor; pages++;
   }
   const uu = (u.data && u.data.user) || {};
-  const out = { at: Date.now(), ttViews: views, ttVideosCounted: n, ttFollowers: uu.follower_count ?? null, ttLikes: uu.likes_count ?? null, ttVideos: uu.video_count ?? null, complete: !more };
+  const out = { at: Date.now(), ttViews: views, ttVideosCounted: n, ttFollowers: uu.follower_count ?? null, ttLikes: uu.likes_count ?? null, ttVideos: uu.video_count ?? null, complete: !more, edits: byId };
   if (n) await env.TT_KV.put("tt_stats", JSON.stringify(out));
   return n ? out : cached || null;
 }
