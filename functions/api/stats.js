@@ -24,7 +24,7 @@ async function youtube() {
 }
 
 export async function onRequestGet(ctx) {
-  const cache = caches.default, key = new Request(new URL("/api/stats?v=3", ctx.request.url).toString());
+  const cache = caches.default, key = new Request(new URL("/api/stats?v=4", ctx.request.url).toString());
   const hit = await cache.match(key); if (hit) return hit;
   const [a, b, c] = await Promise.allSettled([tiktok(), youtube(), ttOfficial(ctx.env).catch(() => null)]);
   const off = c.value || {};
