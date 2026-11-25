@@ -2593,7 +2593,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 /* prévia automática das edições (todas juntas) */
 .vf .apv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.5s cubic-bezier(.4,0,.2,1)}
 .vf .apv.fast{transition-duration:.35s}
-.vf .apv:not(.on){transition-duration:.7s}
+.vf .apv:not(.on){transition-duration:.9s}
 .vf .apv.on{opacity:1}
 .vf.auto .pbtn{opacity:.55;transform:scale(.85)}
 .vf.auto:hover .pbtn{opacity:1;transform:none}
@@ -3435,9 +3435,9 @@ function bindHover(el){
   const BEAT = {                       // [início, fim] do trecho das batidas — sem intro e sem a vinheta DEVOE do final
     "7350078028938104069": [8.0, 17.5], "7541621014271216902": [11.0, 20.5], "7559176064979733816": [15.8, 23.5], "7559603618534460683": [12.0, 27.5],
     "7577945536188239111": [9.8, 19.5], "7578516752187837703": [9.0, 17.5], "7593681786358549768": [8.0, 16.5], "7596885480956808469": [5.0, 13.5] };
-  const COVER_MS = 800;                // capa fica parada antes de começar a sumir
-  const HOLD = 5200;                   // tempo em cada posição do carrossel (com prévia)
-  let secVis = false, lastGo = performance.now(), holdUntil = 0;
+  const COVER_MS = 450;                // capa fica parada antes de começar a sumir
+  const HOLD = 6200, BACK_MS = 1000;                  // tempo em cada posição do carrossel (com prévia)
+  let secVis = false, lastGo = performance.now(), holdUntil = 0, covered = false;
   const mem = {};                      // idx -> { t, at }: continua de onde parou quando o card é trocado pelo clone
   const visVfs = () => { const r = box.getBoundingClientRect();
     return [...box.querySelectorAll(".card .vf")].filter(v => { const b = v.getBoundingClientRect(); return b.right > r.left + 24 && b.left < r.right - 24; }); };
@@ -3480,13 +3480,19 @@ function bindHover(el){
   setInterval(() => {
     const r = box.getBoundingClientRect(), now = performance.now();
     if (APV_OK) tick();
-    if (paused || (current && box.contains(current.el)) || document.hidden || r.top > innerHeight || r.bottom < 0) return;
-    if (now - lastUser < 1800) { lastGo = now; return; }   // espera um pouco depois do deslize
+    if (paused || (current && box.contains(current.el)) || document.hidden || r.top > innerHeight || r.bottom < 0) {
+      if (covered) { covered = false; lastGo = now; holdUntil = now + COVER_MS; box.querySelectorAll(".apv").forEach(v => v.showAt = holdUntil); }
+      return; }
+    if (now - lastUser < 1800) { lastGo = now; if (covered) { covered = false; holdUntil = now + COVER_MS; box.querySelectorAll(".apv").forEach(v => v.showAt = holdUntil); } return; }   // espera um pouco depois do deslize
+    /* antes de deslizar: todas voltam para a capa suavemente; aí o carrossel anda; depois a prévia volta */
+    if (APV_OK && !covered && now - lastGo >= HOLD - BACK_MS) {
+      covered = true; holdUntil = 9e15;
+      box.querySelectorAll(".apv").forEach(v => { v.showAt = 9e15; if (v.classList.contains("on")) { v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto"); } });
+    }
     if (now - lastGo < (APV_OK ? HOLD : 2200)) return;
-    lastGo = now;
+    lastGo = now; covered = false;
     holdUntil = now + 650 + COVER_MS;
-    if (APV_OK) box.querySelectorAll(".apv").forEach(v => {   // desliza: todas voltam para a capa, depois a prévia volta
-      v.showAt = now + 650 + COVER_MS; if (v.classList.contains("on")) { v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto"); } });
+    box.querySelectorAll(".apv").forEach(v => { v.showAt = holdUntil; });
     go(dir);
   }, 100);
 })();
