@@ -3065,6 +3065,9 @@ const CONFIG = {
     { id:"7350078028938104069", views:"1.9M", title:"Cap. Nascimento", short:"Nascimento", sub:"Edit de Tropa de Elite" }
   ],
   arts: ["Criativos que convertem","Dia das Crianças","Campanha Celso Morais","É Hoje — Beco da Lua","Saia Rodada","Turma Líder 2024","Confraternização ASCOM"],
+  /* visualizações do TikTok: o TikTok não mostra o total em lugar nenhum público, então este número é fixo
+     (atualize pelo TikTok Studio quando quiser). O site soma com as visualizações do YouTube, que vêm ao vivo. */
+  ttViews: 216760000,
   stats: [
     { n:243.9, s:"M", label:"Visualizações", icon:"eye" },
     { n:287.1, s:"K",  label:"Seguidores no TikTok",     icon:"users" },
@@ -3597,6 +3600,20 @@ const ICONS = {
   clock:'<circle cx="12" cy="12" r="9.5"/><path d="M12 6.5V12l3.5 2.5"/>'
 };
 $("#stats").innerHTML = CONFIG.stats.map(s => `<div class="st"><svg viewBox="0 0 24 24">${ICONS[s.icon]}</svg><div><b data-n="${s.n}" data-s="${esc(s.s)}" data-p="${esc(s.pre || "")}">0</b><span>${esc(s.label)}</span></div></div>`).join("");
+/* números ao vivo: seguidores do TikTok, inscritos e visualizações do YouTube (functions/api/stats.js, atualiza a cada 15 min) */
+(function(){
+  if (!/^https?:$/.test(location.protocol)) return;
+  fetch("/api/stats").then(r => r.ok ? r.json() : null).then(d => { if (!d || !d.ok) return;
+    const bs = [...document.querySelectorAll("#stats .st b")];
+    const put = (icon, val) => { const k = CONFIG.stats.findIndex(x => x.icon === icon), b = bs[k]; if (!b || !(val > 0)) return;
+      b.dataset.n = val;
+      if (b.textContent !== "0" && !/^\D*0(\.0)?\D*$/.test(b.textContent)) b.textContent = (b.dataset.p || "") + val.toFixed(String(val).includes(".") ? 1 : 0) + (b.dataset.s || ""); };
+    const r1 = (n, d) => Math.round(n / d * 10) / 10;
+    if (d.ytViews) put("eye", r1((CONFIG.ttViews || 0) + d.ytViews, 1e6));
+    if (d.ttFollowers) { put("users", r1(d.ttFollowers, 1e3)); const s = document.querySelector(".ttb small"); if (s) s.textContent = r1(d.ttFollowers, 1e3) + "K"; }
+    if (d.ytSubs) { put("play", r1(d.ytSubs, 1e3)); const s = document.querySelector(".ytb small"); if (s) s.textContent = r1(d.ytSubs, 1e3) + "K"; }
+  }).catch(() => {});
+})();
 
 /* ---------- serviços / depoimentos ---------- */
 const TOOLS = {
