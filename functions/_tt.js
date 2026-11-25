@@ -28,20 +28,27 @@ export async function getToken(env) {
 /* soma as visualizações de todos os vídeos (cache de 1 h no KV) */
 export async function ttOfficial(env) {
   const t = await getToken(env); if (!t) return null;
-  const cached = await env.TT_KV.get("tt_stats", "json");
+  const cached = await env.TT_KV.get("tt_stats2", "json");
   if (cached && cached.edits && Date.now() - cached.at < 3600e3) return cached;
   const H = { authorization: `Bearer ${t.access_token}`, "content-type": "application/json" };
   const u = await (await fetch("https://open.tiktokapis.com/v2/user/info/?fields=follower_count,likes_count,video_count", { headers: H })).json();
   const byId = {};
-  let views = 0, n = 0, cursor = undefined, more = true, pages = 0;
-  while (more && pages < 80) {
-    const r = await (await fetch("https://open.tiktokapis.com/v2/video/list/?fields=id,view_count", { method: "POST", headers: H,
-      body: JSON.stringify(cursor ? { max_count: 20, cursor } : { max_count: 20 }) })).json();
+  let views = 0, n = 0, cursor = undefined, more = true, pages = 0, err = null;
+  while (more && pages < 45) {
+    let r = null;
+    for (let tr = 0; tr < 2 && !r; tr++) {               // tenta de novo uma vez se o TikTok falhar
+      try { const x = await (await fetch("https://open.tiktokapis.com/v2/video/list/?fields=id,view_count", { method: "POST", headers: H,
+        body: JSON.stringify(cursor ? { max_count: 20, cursor } : { max_count: 20 }) })).json();
+        if (x.error && x.error.code && x.error.code !== "ok") err = x.error.code; else { r = x; err = null; } } catch (e) { err = String(e); }
+    }
+    if (!r) break;
     const d = r.data || {}; (d.videos || []).forEach(v => { views += +v.view_count || 0; n++; if (EDIT_IDS.includes(String(v.id))) byId[String(v.id)] = +v.view_count || 0; });
     more = !!d.has_more; cursor = d.cursor; pages++;
   }
   const uu = (u.data && u.data.user) || {};
-  const out = { at: Date.now(), ttViews: views, ttVideosCounted: n, ttFollowers: uu.follower_count ?? null, ttLikes: uu.likes_count ?? null, ttVideos: uu.video_count ?? null, complete: !more, edits: byId };
-  if (n) await env.TT_KV.put("tt_stats", JSON.stringify(out));
-  return n ? out : cached || null;
+  const out = { at: Date.now(), ttViews: views, ttVideosCounted: n, err, ttFollowers: uu.follower_count ?? null, ttLikes: uu.likes_count ?? null, ttVideos: uu.video_count ?? null, complete: !more, edits: byId };
+  /* só vale se leu todos os vídeos (senão o total ficaria menor); caso contrário mantém o último completo */
+  const full = !more && !err && (!out.ttVideos || n >= out.ttVideos * 0.9);
+  if (full) { await env.TT_KV.put("tt_stats2", JSON.stringify(out)); return out; }
+  return cached && cached.complete ? cached : null;
 }

@@ -24,7 +24,7 @@ async function youtube() {
 }
 
 export async function onRequestGet(ctx) {
-  const cache = caches.default, key = new Request(new URL("/api/stats?v=4", ctx.request.url).toString());
+  const cache = caches.default, key = new Request(new URL("/api/stats?v=5", ctx.request.url).toString());
   const hit = await cache.match(key); if (hit) return hit;
   const [a, b, c] = await Promise.allSettled([tiktok(), youtube(), ttOfficial(ctx.env).catch(() => null)]);
   const off = c.value || {};
@@ -33,6 +33,7 @@ export async function onRequestGet(ctx) {
   if (off.ttFollowers) data.ttFollowers = off.ttFollowers;
   if (off.ttLikes) data.ttLikes = off.ttLikes;
   if (off.edits) data.edits = off.edits;
+  if (off.ttVideosCounted) data.ttCounted = off.ttVideosCounted;
   if (off.ttVideos) data.ttVideos = off.ttVideos;
   const ok = !!(data.ttFollowers || data.ytSubs || data.ytViews);
   const res = new Response(JSON.stringify({ ok, ...data }), { headers: { "content-type": "application/json; charset=utf-8",

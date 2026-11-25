@@ -22,7 +22,7 @@ export async function onRequestGet({ request, env }) {
     const owner = await env.TT_KV.get("tt_owner");
     if (owner && owner !== t.open_id) return page("Conta não permitida", "Só a conta dona do site pode ser ligada aqui.", false);
     if (!owner) await env.TT_KV.put("tt_owner", t.open_id);
-    await env.TT_KV.put("tt_token", JSON.stringify(t)); await env.TT_KV.delete("tt_stats");
+    await env.TT_KV.put("tt_token", JSON.stringify(t)); await env.TT_KV.delete("tt_stats2");
     const ok = (t.scope || "").includes("video.list");
     return page(ok ? "TikTok conectado! ✓" : "Conectado, mas sem permissão de vídeos",
       ok ? "Pronto. O site já vai mostrar as visualizações do TikTok ao vivo (atualiza a cada hora)." : "Confira se o escopo video.list está marcado no app do TikTok e autorize de novo.", ok);
