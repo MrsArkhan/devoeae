@@ -3432,45 +3432,45 @@ function bindHover(el){
   /* prévia automática: todas as edições visíveis tocam juntas (sem som, qualidade original), só no trecho das batidas.
      Cada card que entra mostra a capa um instante e ela some devagar. O carrossel anda no mesmo ritmo de antes (2,2 s). */
   const APV_OK = !matchMedia("(prefers-reduced-motion: reduce)").matches && !(navigator.connection && navigator.connection.saveData);
-  const BEAT = {                       // [início, fim] do trecho das batidas — sem intro e sem a vinheta DEVOE do final
-    "7350078028938104069": [8.0, 17.5], "7541621014271216902": [11.0, 20.5], "7559176064979733816": [15.8, 23.5], "7559603618534460683": [12.0, 27.5],
-    "7577945536188239111": [9.8, 19.5], "7578516752187837703": [9.0, 17.5], "7593681786358549768": [8.0, 16.5], "7596885480956808469": [5.0, 13.5] };
+  /* início da melhor cena (o drop/flash das batidas). Toda vez que a prévia aparece ela recomeça daqui — nunca continua.
+     Toca no máximo 6,5 s, longe da intro e da vinheta/partículas do final. */
+  const BEAT = { "7350078028938104069": 8.1, "7541621014271216902": 11.0, "7559176064979733816": 16.15, "7559603618534460683": 9.28,
+                 "7577945536188239111": 9.22, "7578516752187837703": 9.25, "7593681786358549768": 8.62, "7596885480956808469": 5.0 };
+  const SPAN = 6.5;
   const COVER_MS = 450;                // capa fica parada antes de começar a sumir
   const HOLD = 6200, BACK_MS = 1000;                  // tempo em cada posição do carrossel (com prévia)
   let secVis = false, lastGo = performance.now(), holdUntil = 0, covered = false;
-  const mem = {};                      // idx -> { t, at }: continua de onde parou quando o card é trocado pelo clone
   const visVfs = () => { const r = box.getBoundingClientRect();
     return [...box.querySelectorAll(".card .vf")].filter(v => { const b = v.getBoundingClientRect(); return b.right > r.left + 24 && b.left < r.right - 24; }); };
   const ensure = vf => {
     let v = vf.querySelector(".apv"); if (v) return v;
     if (vf.classList.contains("playing")) return null;
     const idx = +vf.dataset.idx, e = CONFIG.edits[idx]; if (!e) return null;
-    const [t0, t1] = BEAT[e.id] || [0, 9e9];
-    const m = mem[idx], warm = m && performance.now() - m.at < 1500;
+    const t0 = BEAT[e.id] || 0, t1 = t0 + SPAN;
     v = document.createElement("video");
-    v.className = "apv" + (warm ? " fast" : ""); v.muted = true; v.defaultMuted = true; v.playsInline = true;
+    v.className = "apv"; v.muted = true; v.defaultMuted = true; v.playsInline = true;
     v.setAttribute("playsinline", ""); v.setAttribute("muted", ""); v.preload = "auto"; v.disablePictureInPicture = true;
-    v.ready = false; v.idx = idx; v.showAt = Math.max(performance.now() + (warm ? 0 : COVER_MS), holdUntil);
-    v.addEventListener("loadedmetadata", () => { v.currentTime = warm && m.t >= t0 && m.t < t1 ? m.t : t0; }, { once: true });
+    v.ready = false; v.t0 = t0; v.showAt = Math.max(performance.now() + COVER_MS, holdUntil);
+    v.addEventListener("loadedmetadata", () => { v.currentTime = t0; }, { once: true });
     v.addEventListener("seeked", () => { v.ready = true; });
-    v.addEventListener("timeupdate", () => { if (v.currentTime >= t1 || v.currentTime < t0 - .5) v.currentTime = t0;
-      if (v.classList.contains("on")) mem[idx] = { t: v.currentTime, at: performance.now() }; });
+    v.addEventListener("timeupdate", () => { if (v.currentTime >= t1) v.currentTime = t0; });
     v.addEventListener("ended", () => { v.currentTime = t0; v.play().catch(() => {}); });
     v.src = `videos/edit-${e.id}.mp4`;
     vf.prepend(v); return v;
   };
   const drop = v => { v.pause(); v.removeAttribute("src"); v.load(); v.remove(); };
+  const rewind = v => { v.pause(); if (v.ready && Math.abs(v.currentTime - v.t0) > .05) { v.ready = false; v.currentTime = v.t0; } };
   const want = () => APV_OK && secVis && !document.hidden && !(current && box.contains(current.el));
   const tick = () => {
     if (!want()) { box.querySelectorAll(".vf.auto").forEach(vf => vf.classList.remove("auto"));
-      box.querySelectorAll(".apv").forEach(v => { if (v.classList.contains("on")) { v.classList.remove("on", "fast"); setTimeout(() => v.isConnected && !v.classList.contains("on") && drop(v), 1500); } else if (!secVis) drop(v); });
+      box.querySelectorAll(".apv").forEach(v => { if (v.classList.contains("on")) { v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto"); setTimeout(() => !v.classList.contains("on") && rewind(v), 950); } else if (!v.paused) rewind(v); });
       return; }
     const vis = visVfs(), now = performance.now();
     box.querySelectorAll(".apv").forEach(v => { if (!vis.includes(v.parentElement)) drop(v); });   // saiu da tela: libera
     vis.forEach(vf => {
-      const v = ensure(vf); if (!v || !v.ready) return;
-      if (v.paused && !v.starting) { v.starting = true; v.play().catch(() => {}).finally(() => v.starting = false); }
-      if (!v.classList.contains("on") && !v.paused && now >= v.showAt) { v.classList.add("on"); vf.classList.add("auto"); }
+      const v = ensure(vf); if (!v || !v.ready || now < v.showAt || v.classList.contains("on")) return;
+      if (v.paused) { if (!v.starting) { v.starting = true; v.play().catch(() => {}).finally(() => v.starting = false); } return; }
+      v.classList.add("on"); vf.classList.add("auto");
     });
   };
   /* perto da seção: já carrega as edições visíveis para começar na hora */
@@ -3487,12 +3487,12 @@ function bindHover(el){
     /* antes de deslizar: todas voltam para a capa suavemente; aí o carrossel anda; depois a prévia volta */
     if (APV_OK && !covered && now - lastGo >= HOLD - BACK_MS) {
       covered = true; holdUntil = 9e15;
-      box.querySelectorAll(".apv").forEach(v => { v.showAt = 9e15; if (v.classList.contains("on")) { v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto"); } });
+      box.querySelectorAll(".apv").forEach(v => { v.showAt = 9e15; if (v.classList.contains("on")) { v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto"); setTimeout(() => !v.classList.contains("on") && rewind(v), 950); } });
     }
     if (now - lastGo < (APV_OK ? HOLD : 2200)) return;
     lastGo = now; covered = false;
     holdUntil = now + 650 + COVER_MS;
-    box.querySelectorAll(".apv").forEach(v => { v.showAt = holdUntil; });
+    box.querySelectorAll(".apv").forEach(v => { v.showAt = holdUntil; if (!v.classList.contains("on")) rewind(v); });
     go(dir);
   }, 100);
 })();
