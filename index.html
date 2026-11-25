@@ -3438,8 +3438,8 @@ function bindHover(el){
      Cada recorte é baixado inteiro antes de tocar (blob), então não trava nem dá "pulinho" esperando internet. */
   const clips = {}, loading = {};
   const fetchClip = id => { if (clips[id] || loading[id]) return;
-    loading[id] = fetch(`videos/cut-${id}.mp4`).then(r => { if (!r.ok) throw 0; return r.blob(); })
-      .then(b => { clips[id] = URL.createObjectURL(b); }).catch(() => { clips[id] = `videos/cut-${id}.mp4`; }); };
+    loading[id] = fetch(`videos/cut-${id}.mp4?v=2`).then(r => { if (!r.ok) throw 0; return r.blob(); })
+      .then(b => { clips[id] = URL.createObjectURL(b); }).catch(() => { clips[id] = `videos/cut-${id}.mp4?v=2`; }); };
   const COVER_MS = 450;                // capa fica parada antes de começar a sumir
   const HOLD = 6200, BACK_MS = 1000;                  // tempo em cada posição do carrossel (com prévia)
   let secVis = false, lastGo = performance.now(), holdUntil = 0, covered = false;
