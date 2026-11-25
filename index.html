@@ -2594,7 +2594,7 @@ canvas.lvbg{position:absolute;inset:-12%;width:124%;height:124%;z-index:2;filter
 .vf .apv{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:1;pointer-events:none;opacity:0;transition:opacity 1.5s cubic-bezier(.4,0,.2,1)}
 .vf .apv.fast{transition-duration:.35s}
 .vf .apv:not(.on){transition-duration:.9s}
-.vf .apv.quick:not(.on){transition-duration:.35s}
+.vf .apv.quick:not(.on){transition:opacity .6s cubic-bezier(.4,0,.2,1)}
 .vf .apv.on{opacity:1}
 .vf.auto .pbtn{opacity:.55;transform:scale(.85)}
 .vf.auto:hover .pbtn{opacity:1;transform:none}
@@ -3424,7 +3424,19 @@ function bindHover(el){
     const d = Math.abs(ev.deltaX) > Math.abs(ev.deltaY) ? ev.deltaX : (ev.shiftKey ? ev.deltaY : 0);
     if (Math.abs(d) > 2) { dir = d > 0 ? 1 : -1; lastUser = performance.now(); }
   }, { passive: true });
-  let arrowGo = d => go(d);          // substituído mais abaixo pela versão com capas (prévia automática)
+  /* deslize suave das setas: animação própria (aceleração e freio suaves), mais elegante que o scroll nativo */
+  let glideRaf = 0, glideTo = null;
+  const glide = (d, ms = 820) => {
+    if (glideRaf) { cancelAnimationFrame(glideRaf); box.scrollLeft = glideTo; }   // clique no meio: termina o anterior e segue
+    const x0 = box.scrollLeft, dx = d * step(), t0 = performance.now(); glideTo = x0 + dx;
+    box.style.scrollBehavior = "auto"; box.style.scrollSnapType = "none";
+    const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+    const f = now => { const t = Math.min(1, (now - t0) / ms); box.scrollLeft = x0 + dx * ease(t);
+      if (t < 1) glideRaf = requestAnimationFrame(f);
+      else { glideRaf = 0; box.style.scrollBehavior = ""; box.style.scrollSnapType = ""; } };
+    glideRaf = requestAnimationFrame(f);
+  };
+  let arrowGo = d => glide(d);       // substituído mais abaixo pela versão com capas (prévia automática)
   $("#cPrev").onclick = () => { dir = -1; lastUser = performance.now(); arrowGo(-1); };
   $("#cNext").onclick = () => { dir = 1; lastUser = performance.now(); arrowGo(1); };
   const init = () => { jump(setW()); upd(); };
@@ -3475,14 +3487,14 @@ function bindHover(el){
   /* setas: as capas voltam rapidinho, o carrossel anda e depois a prévia volta (igual ao automático) */
   let arrowT;
   arrowGo = d => {
-    if (!APV_OK) return go(d);
+    if (!APV_OK) return glide(d);
     const now = performance.now(), on = [...box.querySelectorAll(".apv.on")];
     covered = false; lastGo = now;
-    holdUntil = now + (on.length ? 380 : 0) + 650 + COVER_MS;
+    holdUntil = now + (on.length ? 320 : 0) + 820 + 550;
     box.querySelectorAll(".apv").forEach(v => { v.showAt = holdUntil;
       if (v.classList.contains("on")) { v.classList.add("quick"); v.classList.remove("on", "fast"); v.parentElement.classList.remove("auto");
-        setTimeout(() => { v.classList.remove("quick"); if (!v.classList.contains("on")) rewind(v); }, 450); } });
-    clearTimeout(arrowT); arrowT = setTimeout(() => go(d), on.length ? 380 : 0);
+        setTimeout(() => { v.classList.remove("quick"); if (!v.classList.contains("on")) rewind(v); }, 650); } });
+    clearTimeout(arrowT); arrowT = setTimeout(() => glide(d), on.length ? 320 : 0);   // a capa já está quase toda de volta quando começa a deslizar
   };
   const want = () => APV_OK && secVis && !document.hidden && !(current && box.contains(current.el));
   const tick = () => {
