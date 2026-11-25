@@ -29,7 +29,7 @@ export async function getToken(env) {
 export async function ttOfficial(env) {
   const t = await getToken(env); if (!t) return null;
   const cached = await env.TT_KV.get("tt_stats", "json");
-  if (cached && Date.now() - cached.at < 3600e3) return cached;
+  if (cached && cached.edits && Date.now() - cached.at < 3600e3) return cached;
   const H = { authorization: `Bearer ${t.access_token}`, "content-type": "application/json" };
   const u = await (await fetch("https://open.tiktokapis.com/v2/user/info/?fields=follower_count,likes_count,video_count", { headers: H })).json();
   const byId = {};
