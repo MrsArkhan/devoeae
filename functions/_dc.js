@@ -6,7 +6,7 @@ import { getToken } from "./_tt.js";
 const USER = "devoe.ae";
 const HOOK_HASH = "694b8dafba730f5a4800ff8f012fe2755c1a6582221fdd0e266a952ca4dacc4a";
 const AVATAR = "https://cdn.discordapp.com/icons/1251384560005156864/784f37c93b4b35ce507481320ab333b0.png?size=256";
-const MIN_GAP = 4 * 60 * 1000;               // no máximo uma checagem a cada 4 min
+const MIN_GAP = 60 * 1000;                   // no máximo uma checagem por minuto
 const cleanTitle = d => (d || "").split(/\s\|/)[0].replace(/#\S+/g, "").replace(/\s+/g, " ").trim();
 
 export async function sha256(s) {
@@ -69,10 +69,11 @@ export async function notify(env, { force = false, init = false } = {}) {
     await kv.put("dc_seen", JSON.stringify(vids.map(v => v.id).slice(0, 60)));
     return { ok: true, init: true, n: vids.length };
   }
-  if (!(await kv.get("dc_first_done"))) {          // uma única vez: mostra o vídeo mais recente no canal
-    await kv.put("dc_first_done", "1");
+  if (!(await kv.get("dc_first_done2"))) {         // uma única vez: mostra o vídeo mais recente no canal
     const top = [...vids].sort((a, b) => (BigInt(b.id) > BigInt(a.id) ? 1 : -1))[0];
-    await fetch(hook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(message(top)) });
+    const r = await fetch(hook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(message(top)) });
+    if (r.ok) await kv.put("dc_first_done2", "1");
+    else return { ok: false, why: "discord " + r.status, detail: (await r.text()).slice(0, 300) };
   }
   const maxSeen = seen.reduce((a, b) => (BigInt(b) > BigInt(a) ? b : a), "0");
   const fresh = vids.filter(v => !seen.includes(v.id) && BigInt(v.id) > BigInt(maxSeen))
