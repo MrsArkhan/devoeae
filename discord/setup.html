@@ -1,0 +1,16 @@
+<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex">
+<title>Ligar avisos do Discord</title>
+<style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0a0a0a;color:#eee;font:16px system-ui,sans-serif}
+main{width:min(520px,92vw)}h1{font-size:20px;color:#F2C94C}input{width:100%;box-sizing:border-box;padding:14px;border-radius:10px;border:1px solid #444;background:#151515;color:#eee;font-size:15px}
+p{color:#aaa}#s{margin-top:14px;font-weight:600}</style></head><body><main>
+<h1>Ligar aviso de vídeo novo do TikTok</h1>
+<p>Cole aqui o link do webhook do canal #new-videos. Ele vai direto para o site e não aparece nesta página.</p>
+<input id="h" type="password" autocomplete="off" placeholder="Cole o link do webhook (Ctrl+V)" autofocus>
+<div id="s"></div></main>
+<script>
+const h=document.getElementById('h'),s=document.getElementById('s');
+async function go(v){v=(v||'').trim();if(!/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(v)){s.textContent='Isso não parece um link de webhook.';return}
+s.textContent='Ligando…';try{const r=await fetch('/api/tt-notify',{method:'POST',headers:{'content-type':'text/plain'},body:JSON.stringify({setup:v})});const j=await r.json();
+s.textContent=r.ok&&j.ok?'✅ Pronto! Avisos ligados ('+(j.n||0)+' vídeos já conhecidos).':'❌ Não aceito ('+r.status+').'}catch(e){s.textContent='❌ Erro de rede.'}h.value=''}
+h.addEventListener('paste',e=>{e.preventDefault();go(e.clipboardData.getData('text'))});h.addEventListener('change',()=>go(h.value));
+</script></body></html>
