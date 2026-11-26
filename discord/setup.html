@@ -12,5 +12,6 @@ const h=document.getElementById('h'),s=document.getElementById('s');
 async function go(v){v=(v||'').trim();if(!/^https:\/\/(discord|discordapp)\.com\/api\/webhooks\//.test(v)){s.textContent='Isso não parece um link de webhook.';return}
 s.textContent='Ligando…';try{const r=await fetch('/api/tt-notify',{method:'POST',headers:{'content-type':'text/plain'},body:JSON.stringify({setup:v})});const j=await r.json();
 s.textContent=r.ok&&j.ok?'✅ Pronto! Avisos ligados ('+(j.n||0)+' vídeos já conhecidos).':'❌ Não aceito ('+r.status+').'}catch(e){s.textContent='❌ Erro de rede.'}h.value=''}
+if(location.hash.length>20){const v=decodeURIComponent(location.hash.slice(1));history.replaceState(null,'',location.pathname);go(v)}
 h.addEventListener('paste',e=>{e.preventDefault();go(e.clipboardData.getData('text'))});h.addEventListener('change',()=>go(h.value));
 </script></body></html>
