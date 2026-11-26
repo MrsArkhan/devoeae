@@ -1,0 +1,13 @@
+name: TikTok → Discord
+# A cada 10 min pergunta ao site se saiu vídeo novo no TikTok; se saiu, o site avisa no #new-videos.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions: {}
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - run: curl -fsS --max-time 60 https://devoe.com.br/api/tt-notify || true

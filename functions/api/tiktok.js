@@ -1,6 +1,7 @@
 // Últimos vídeos do TikTok @devoe.ae para as notificações do site.
 // Lê a página pública de embed do perfil (tiktok.com/embed/@devoe.ae) e devolve os mais novos.
 // Fica em cache por 15 min para não consultar o TikTok a cada visita.
+import { notify } from "../_dc.js";
 const USER = "devoe.ae";
 const fmt = n => { n = +n || 0;
   if (n >= 1e6) return (n / 1e6).toFixed(n >= 1e7 ? 0 : 1).replace(/\.0$/, "") + "M";
@@ -34,5 +35,6 @@ export async function onRequestGet(ctx) {
     "cache-control": ok ? "public, max-age=900" : "public, max-age=60",
     "access-control-allow-origin": "*" } });
   if (ok) ctx.waitUntil(cache.put(key, res.clone()));
+  ctx.waitUntil(notify(ctx.env).catch(() => {}));   // aproveita a visita para checar vídeo novo e avisar no Discord
   return res;
 }
