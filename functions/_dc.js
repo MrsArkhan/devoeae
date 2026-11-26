@@ -69,6 +69,11 @@ export async function notify(env, { force = false, init = false } = {}) {
     await kv.put("dc_seen", JSON.stringify(vids.map(v => v.id).slice(0, 60)));
     return { ok: true, init: true, n: vids.length };
   }
+  if (!(await kv.get("dc_first_done"))) {          // uma única vez: mostra o vídeo mais recente no canal
+    await kv.put("dc_first_done", "1");
+    const top = [...vids].sort((a, b) => (BigInt(b.id) > BigInt(a.id) ? 1 : -1))[0];
+    await fetch(hook, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(message(top)) });
+  }
   const maxSeen = seen.reduce((a, b) => (BigInt(b) > BigInt(a) ? b : a), "0");
   const fresh = vids.filter(v => !seen.includes(v.id) && BigInt(v.id) > BigInt(maxSeen))
     .sort((a, b) => (BigInt(a.id) > BigInt(b.id) ? 1 : -1)).slice(-3);   // do mais antigo pro mais novo, no máx. 3
