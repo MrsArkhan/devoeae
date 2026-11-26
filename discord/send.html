@@ -1,0 +1,14 @@
+<!doctype html><meta charset="utf-8"><title>DEVOE → Discord</title>
+<body style="background:#0A0A0A;color:#F2C94C;font:16px system-ui;display:grid;place-items:center;height:100vh">Enviando imagens para o Discord…
+<script>
+(async () => {
+  const files = (new URLSearchParams(location.search).get("f") || "").split(",").filter(Boolean);
+  for (const f of files) {
+    if (!/^[\w.-]+$/.test(f)) continue;
+    const b = await (await fetch(f)).arrayBuffer();
+    window.opener && window.opener.postMessage({ devoeFile: f, buf: b }, "https://discord.com", [b]);
+  }
+  window.opener && window.opener.postMessage({ devoeDone: true }, "https://discord.com");
+  setTimeout(() => close(), 400);
+})();
+</script>
